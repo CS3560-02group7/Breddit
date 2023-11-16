@@ -2,73 +2,63 @@ require('dotenv').config()
 import express from "express";
 const pool = require('./db/db.ts'); // Import the pool
 import { Account, Comment, Post, UserCommunityRole, Community } from "./db/db_types";
+var bodyParser = require('body-parser')
+var jsonParser = bodyParser.json()
 const app = express();
+app.use(jsonParser)
 const port = 3000;
 
-/*
-The whole point of this API is to let the frontend interact with the database, without having to do TOO much work
-Also making sure that only authorized users can do things with the data
-
-Routes --> what combination of http method + url do we need to achieve the functionality that we want
-routes would all go here
---> db connection and all taht goes out
---> auth stuff goes out
-
-Get --> read
-Post --> create
-patch/put --> update
-delete --> delete
-*/
-
-
-//////////////////////////////////////////////////////////////////////////////////////USER\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//USER\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 //Creates A User Object
 app.post('/user', (req, res) => {
-  const {mail, password, username, profilePicture,} = req.body;
-  // res -> status code
-});
+  // We are assuming password encryption and decryption happens on the frontend
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+  console.log(req.body)
+  const {emailAddress, password, username, profilePicture} = req.body;
+  
+  const newUser: Account = {
+    emailAddress: emailAddress,
+    username: username,
+    password: password,
+    profilePicture: profilePicture,
+    reputation: 0
+  }
 
-//Returns user data
-//USER\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-app.get('/', (req, res) => {
-  // Insert a value into account, then we query it to see if we did good
-  // var newUser: Account = {
-  //   emailAddress: "chirayurai@gmail.com",
-  //   username: "chirayu",
-  //   password: "password123",
-  //   profilePicture: "https://google.com",
-  //   reputation: 1
-  // }
-
-  // This will insert items into the db, will work on extracting types and all that
-  // pool.query('INSERT INTO account SET ?', newUser, (error, results, fields) => {
-  //   if (error) {
-  //       // Handle error after the release.
-  //       console.error('An error occurred: ', error);
-  //   }
-
-  //   // Use the results here
-  //   console.log('Inserted Row ID:', results.insertId);
-  // });
-
-  // How ot query every single item from db
-  pool.query('SELECT * FROM account', (err, accounts) => {
-    if (err) {
-        // Handle error
-        res.status(500).send('Server Error');
-    } else {
-        res.json(accounts);
+  pool.query('INSERT INTO account SET ?', newUser, (error, results, fields) => {
+    if (error) {
+        console.error('An error occurred: ', error);
+        return res.status(500).send('An error has occured within the server')
     }
+    res.send(201).send('Sucessfully added new user!')
+  });
 });
 
+
+// add one to user reputation
+app.put('/update_profile_pic', (req, res) => {
+  const {userID} = req.body
+})
+
+
+// subtract one to user reputation
+app.put('/update_profile_pic', (req, res) => {
+  const {userID} = req.body
 })
 
 // Returns user data (including communities they're subbed to)
 app.get('/user', (req, res) => {
   const {userID} = req.query; 
   //res -> json object
+  pool.query(`SELECT * FROM account where userID="${userID}"`, (err, user) => {
+    if (err) {
+        res.status(500).send('Server Error');
+    } else {
+        res.json(user);
+    }
+  });
 });
 
 //Adds a community to the list of communities users are in
