@@ -1,7 +1,17 @@
+require('dotenv').config()
 import express from "express";
-
+import { userInfo } from "os";
 const app = express();
 const port = 3000;
+
+interface Account {
+  emailAddress: string,
+  username: string,
+  password: string,
+  profilePicture: string,
+  reputation: number
+}
+
 /*
 The whole point of this API is to let the frontend interact with the database, without having to do TOO much work
 Also making sure that only authorized users can do things with the data
@@ -27,6 +37,42 @@ app.post('/user', (req, res) => {
 });
 
 //Returns user data
+//USER\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+app.get('/', (req, res) => {
+  // Insert a value into account, then we query it to see if we did good
+  var newUser: Account = {
+    emailAddress: "chirayurai@gmail.com",
+    username: "chirayu",
+    password: "password123",
+    profilePicture: "https://google.com",
+    reputation: 1
+  }
+
+  // This will insert items into the db, will work on extracting types and all that
+  pool.query('INSERT INTO account SET ?', newUser, (error, results, fields) => {
+    if (error) {
+        // Handle error after the release.
+        console.error('An error occurred: ', error);
+    }
+
+    // Use the results here
+    console.log('Inserted Row ID:', results.insertId);
+  });
+
+  // How ot query every single item from db
+  pool.query('SELECT * FROM account', (err, accounts) => {
+    if (err) {
+        // Handle error
+        res.status(500).send('Server Error');
+    } else {
+        res.json(accounts);
+    }
+});
+
+})
+
+// Returns user data (including communities they're subbed to)
 app.get('/user', (req, res) => {
   const {userID} = req.query; 
   //res -> json object
