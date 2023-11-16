@@ -148,19 +148,19 @@ app.delete('/user', (req, res) => {
 
 //Creates A Post
 app.post('/post', (req, res) => {
-  const {userID, title, type, body, tags} = req.body;
+  const {communityID,userID, title, type, body, tags} = req.body;
   // res -> status code
 });
 
 //Gets Post Data
 app.get('/post', (req, res) => {
-  const {userID, postID} = req.query;
+  const {postID} = req.query;
   // res -> JSON object
 });
 
 //Edit Body Of Post
 app.put('/post', (req, res) => {
-  const {userID, postID, edit,tags} = req.query;
+  const {userID, postID, data, tags} = req.query;
   // res -> status code
 });
 
@@ -185,13 +185,13 @@ app.delete('/user', (req, res) => {
 //////////////////////////////////////////////////////////////////////////////////////Comments\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //Creates A Comment (no reply)
 app.post('/comment', (req, res) => {
-  const {userID, description, postID} = req.body;
+  const {userID, data, postID} = req.body;
   // res -> status code
 });
 
 //Creates A Comment (as reply)
 app.post('/commentReply', (req, res) => {
-  const {userID, description, parentID} = req.body;
+  const {userID, data, parentID} = req.body;
   // res -> status code
 });
 
@@ -203,7 +203,7 @@ app.get('/comment', (req, res) => {
 
 //editsComment
 app.put('/editComment', (req, res) => {
-  const {userID, commentID} = req.query;
+  const {userID, commentID, data} = req.query;
   // res -> status Code
 });
 
