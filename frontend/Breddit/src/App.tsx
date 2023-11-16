@@ -9,7 +9,7 @@ import NotFound from './Pages/NotFound';
 import CreatePost from "./Pages/CreatePost";
 import UserProfile from "./Pages/UserProfile";
 
-// TODO: Find a CSS library, or just use vanilla up to yall
+// TODO: Find a CSS library, or just use vanilla up to yall :)
 
 /*
 Componenets 
@@ -37,19 +37,19 @@ function App() {
     <>
       <BrowserRouter>
         <Routes>
-            <Route path="/" element={<Layout />}>
-                <Route index element={<Home />} />
-                <Route path="chat" element={<Chat />} />
-                <Route
-                    path="/c/:community"
-                    element={<Community />}
-                />
-                <Route path="login" element={<Login />} />
-                <Route path="signup" element={<SignUp />} />
-                <Route path="create_post" element={<CreatePost />} />
-                <Route path="profile/:user" element={<UserProfile />} />
-                <Route path="*" element={<NotFound />} />
-            </Route>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="chat" element={<Chat />} />
+            <Route
+              path="/c/:community"
+              element={<Community />}
+            />
+            <Route path="login" element={<Login />} />
+            <Route path="signup" element={<SignUp />} />
+            <Route path="create_post" element={<CreatePost />} />
+            <Route path="profile/:user" element={<UserProfile />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </>
