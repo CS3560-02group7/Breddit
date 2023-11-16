@@ -1,16 +1,9 @@
 require('dotenv').config()
 import express from "express";
-import { userInfo } from "os";
+const pool = require('./db/db.ts'); // Import the pool
+import { Account, Comment, Post, UserCommunityRole, Community } from "./db/db_types";
 const app = express();
 const port = 3000;
-
-interface Account {
-  emailAddress: string,
-  username: string,
-  password: string,
-  profilePicture: string,
-  reputation: number
-}
 
 /*
 The whole point of this API is to let the frontend interact with the database, without having to do TOO much work
@@ -41,24 +34,24 @@ app.post('/user', (req, res) => {
 
 app.get('/', (req, res) => {
   // Insert a value into account, then we query it to see if we did good
-  var newUser: Account = {
-    emailAddress: "chirayurai@gmail.com",
-    username: "chirayu",
-    password: "password123",
-    profilePicture: "https://google.com",
-    reputation: 1
-  }
+  // var newUser: Account = {
+  //   emailAddress: "chirayurai@gmail.com",
+  //   username: "chirayu",
+  //   password: "password123",
+  //   profilePicture: "https://google.com",
+  //   reputation: 1
+  // }
 
   // This will insert items into the db, will work on extracting types and all that
-  pool.query('INSERT INTO account SET ?', newUser, (error, results, fields) => {
-    if (error) {
-        // Handle error after the release.
-        console.error('An error occurred: ', error);
-    }
+  // pool.query('INSERT INTO account SET ?', newUser, (error, results, fields) => {
+  //   if (error) {
+  //       // Handle error after the release.
+  //       console.error('An error occurred: ', error);
+  //   }
 
-    // Use the results here
-    console.log('Inserted Row ID:', results.insertId);
-  });
+  //   // Use the results here
+  //   console.log('Inserted Row ID:', results.insertId);
+  // });
 
   // How ot query every single item from db
   pool.query('SELECT * FROM account', (err, accounts) => {
