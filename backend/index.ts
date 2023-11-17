@@ -1,9 +1,12 @@
 require('dotenv').config()
-import express from "express";
 const pool = require('./db/db.ts'); // Import the pool
-import { Account, Comment, Post, UserCommunityRole, Community } from "./db/db_types";
 var bodyParser = require('body-parser')
 var jsonParser = bodyParser.json()
+
+import express from "express";
+import { Account, Comment, Post, UserCommunityRole, Community } from "./db/db_types";
+
+
 const app = express();
 app.use(jsonParser)
 const port = 3000;
@@ -12,11 +15,10 @@ const port = 3000;
 
 //Creates A User Object
 app.post('/user', (req, res) => {
-  // We are assuming password encryption and decryption happens on the frontend
+  
   if (!req.body || Object.keys(req.body).length === 0) {
     return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
   }
-  console.log(req.body)
   const {emailAddress, password, username, profilePicture} = req.body;
   
   const newUser: Account = {
@@ -38,21 +40,46 @@ app.post('/user', (req, res) => {
 
 
 // add one to user reputation
-app.put('/update_profile_pic', (req, res) => {
+app.put('/decrement_user_rep', (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
   const {userID} = req.body
+
+  pool.query(`UPDATE account SET reputation=reputation - 1 WHERE userID="${userID}"`, (err, user) => {
+    if (err) {
+        console.log(err)
+        res.status(500).send('Server Error, could not do the thing');
+    } else {
+        res.json(user);
+    }
+  });
 })
 
 
 // subtract one to user reputation
-app.put('/update_profile_pic', (req, res) => {
+app.put('/increment_user_rep', (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
   const {userID} = req.body
+
+  pool.query(`UPDATE account SET reputation = reputation + 1 WHERE userID = "${userID}"`, (err, user) => {
+    if (err) {
+        res.status(500).send('Server Error');
+    } else {
+        res.json(user);
+    }
+  });
 })
 
 // Returns user data (including communities they're subbed to)
+
+// TODO: Add the communities users are subbed to
 app.get('/user', (req, res) => {
   const {userID} = req.query; 
   //res -> json object
-  pool.query(`SELECT * FROM account where userID="${userID}"`, (err, user) => {
+  pool.query(`SELECT * FROM account WHERE userID="${userID}"`, (err, user) => {
     if (err) {
         res.status(500).send('Server Error');
     } else {
@@ -62,22 +89,62 @@ app.get('/user', (req, res) => {
 });
 
 //Adds a community to the list of communities users are in
-app.put('/subscribeToCommunity', (req, res) => {
-  const {userID, communityID} = req.body
-  // res -> status code
+app.post('/subscribeToCommunity', (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, communityID} = req.body;
+  
+  const subToComm:UserCommunityRole = {
+    roleInCommunity: "member",
+    userID: userID,
+    communityID: communityID,
+  }
+
+  pool.query('INSERT INTO userCommunityRole SET ?', subToComm, (error, results, fields) => {
+    if (error) {
+        console.error('An error occurred: ', error);
+        return res.status(500).send('An error has occured within the server')
+    }
+    res.send(201).send('Sucessfully subscribed user to community!')
+  });
 });
 
 //Changes the profile picture of the user once profile has already been created
 app.put('/changeProfilePic', (req, res) => {
-  // do this things with that
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
   const {userID, photoURL} = req.body
-  // res -> status code
+
+  // First we need to validate the req.query ngl
+  pool.query(`UPDATE account SET profilePicture = "${photoURL}" WHERE userID=${userID}`, (error, results, fields) => {
+    if (error) {
+        console.error('An error occurred: ', error);
+        return res.status(500).send('An error has occured within the server')
+    }
+    res.send(201).send('Successfully changed user profile picture :D')
+  });
+  
 });
 
 //Deletes User
 app.delete('/user', (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
   const {userID} = req.body
-  // res -> status code
+  
+  pool.query(`DELETE FROM accounts WHERE userID=${userID}`, (error, results, fields) => {
+    if (error) {
+        console.error('An error occurred: ', error);
+        return res.status(500).send('An error has occured within the server')
+    }
+    res.send(200).send('Successfully deleted user!')
+  });
+
 });
 
 //////////////////////////////////////////////////////////////////////////////////////COMMUNITY\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
