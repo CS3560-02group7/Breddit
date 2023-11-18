@@ -1,4 +1,5 @@
 require('dotenv').config()
+const bcrypt = require("bcrypt")
 const pool = require('./db/db.ts'); // Import the pool
 var bodyParser = require('body-parser')
 var jsonParser = bodyParser.json()
@@ -13,31 +14,82 @@ const port = 3000;
 
 //USER\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-//Creates A User Object
-app.post('/user', (req, res) => {
-  
+// Creates user object in db
+app.post('/sign_up', async (req, res) => {
+  // Ensuring we have a req.body
   if (!req.body || Object.keys(req.body).length === 0) {
-    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
-  }
-  const {emailAddress, password, username, profilePicture} = req.body;
-  
-  const newUser: Account = {
-    emailAddress: emailAddress,
-    username: username,
-    password: password,
-    profilePicture: profilePicture,
-    reputation: 0
+      return res.sendStatus(400);
   }
 
-  pool.query('INSERT INTO account SET ?', newUser, (error, results, fields) => {
-    if (error) {
-        console.error('An error occurred: ', error);
-        return res.status(500).send('An error has occured within the server')
-    }
-    res.send(201).send('Sucessfully added new user!')
-  });
+  // Gathering all the info
+  const { emailAddress, password, username, profilePicture } = req.body;
+
+  try {
+      // Check to see if user already exists in the db
+      const [results, fields] = await pool.promise().query('SELECT emailAddress FROM account WHERE emailAddress = ?', [emailAddress]);
+
+      if (results.length >= 1) {
+          return res.sendStatus(403); // User already exists
+      }
+
+      // User does not exist, proceed with password hashing and storing the new user
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      const newUser = {
+          emailAddress: emailAddress,
+          username: username,
+          password: hashedPassword,
+          profilePicture: profilePicture,
+          reputation: 0
+      };
+
+      // Insert user into db (with hashed password)
+      await pool.promise().query('INSERT INTO account SET ?', newUser);
+
+      return res.sendStatus(201); // Successfully created the user
+  } catch (error) {
+      console.error('An error occurred: ', error);
+      return res.sendStatus(500); // Internal server error
+  }
 });
 
+
+// Creates a user object (basically signs someone up)
+
+// Authenticates a user for logging in purposes
+app.post('/log_in', async (req, res) => {
+  // Ensuring we have a req.body
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.sendStatus(400)
+  }
+
+  const {emailAddress, password} = req.body;
+
+  try {
+    // Execute the query and wait for the result
+    const [results, fields] = await pool.promise().query(`SELECT * FROM account WHERE emailAddress = ?`, [emailAddress]);
+
+    if (results.length === 0) {
+        return res.status(403).send("Error: User does not exist in database");
+    }
+
+    const currUserInfo = results[0];
+
+    // Validate password
+    const isPasswordValid = await bcrypt.compare(password, currUserInfo.password);
+    if (!isPasswordValid) {
+        return res.status(401).send("Incorrect password for user");
+    }
+
+    // Now that we know the user has the correct log in info, we can send back their userID, which the frontend will use
+    return res.json({userID: currUserInfo.userID})
+
+  } catch (error) {
+      console.error('An error occurred: ', error);
+      return res.status(500).send('An error has occurred within the server');
+  }
+});
 
 // add one to user reputation
 app.put('/decrement_user_rep', (req, res) => {
@@ -74,12 +126,18 @@ app.put('/increment_user_rep', (req, res) => {
 })
 
 // Returns user data (including communities they're subbed to)
-
-// TODO: Add the communities users are subbed to
 app.get('/user', (req, res) => {
   const {userID} = req.query; 
-  //res -> json object
-  pool.query(`SELECT * FROM account WHERE userID="${userID}"`, (err, user) => {
+  
+  const sqlStatement = `
+  SELECT account.emailAddress, account.username, account.profilePicture, account.reputation, community.name as communityName  
+  FROM userCommunityRole
+  JOIN account on account.userID = userCommunityRole.userID
+  JOIN community on community.communityID = userCommunityRole.communityID
+  WHERE userCommunityRole.userID = ${userID}
+  `
+
+  pool.query(sqlStatement, (err, user) => {
     if (err) {
         res.status(500).send('Server Error');
     } else {
@@ -97,7 +155,7 @@ app.post('/subscribeToCommunity', (req, res) => {
   const {userID, communityID} = req.body;
   
   const subToComm:UserCommunityRole = {
-    roleInCommunity: "member",
+    role: "member",
     userID: userID,
     communityID: communityID,
   }
@@ -107,7 +165,7 @@ app.post('/subscribeToCommunity', (req, res) => {
         console.error('An error occurred: ', error);
         return res.status(500).send('An error has occured within the server')
     }
-    res.send(201).send('Sucessfully subscribed user to community!')
+    res.sendStatus(201).send('Sucessfully subscribed user to community!')
   });
 });
 
@@ -124,7 +182,7 @@ app.put('/changeProfilePic', (req, res) => {
         console.error('An error occurred: ', error);
         return res.status(500).send('An error has occured within the server')
     }
-    res.send(201).send('Successfully changed user profile picture :D')
+    res.sendStatus(201).send('Successfully changed user profile picture :D')
   });
   
 });
@@ -137,10 +195,10 @@ app.delete('/user', (req, res) => {
 
   const {userID} = req.body
   
-  pool.query(`DELETE FROM accounts WHERE userID=${userID}`, (error, results, fields) => {
+  pool.query(`DELETE FROM account WHERE userID=${userID}`, (error, results, fields) => {
     if (error) {
         console.error('An error occurred: ', error);
-        return res.status(500).send('An error has occured within the server')
+        return res.sendStatus(500).send('An error has occured within the server')
     }
     res.send(200).send('Successfully deleted user!')
   });

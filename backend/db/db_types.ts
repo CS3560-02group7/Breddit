@@ -33,8 +33,7 @@ export interface Post {
 }
 
 export interface UserCommunityRole {
-    // id is autoincrement, don't need it. Might also remove that id from the db, idk for sure
-    roleInCommunity: string,
+    role: string,
     userID: number,
     communityID: number
 }
