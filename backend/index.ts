@@ -92,41 +92,40 @@ app.post('/log_in', async (req, res) => {
 });
 
 // add one to user reputation
-app.put('/decrement_user_rep', (req, res) => {
+app.put('/decrement_user_rep', async (req, res) => {
   if (!req.body || Object.keys(req.body).length === 0) {
     return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
   }
   const {userID} = req.body
 
-  pool.query(`UPDATE account SET reputation=reputation - 1 WHERE userID="${userID}"`, (err, user) => {
-    if (err) {
-        console.log(err)
-        res.status(500).send('Server Error, could not do the thing');
-    } else {
-        res.json(user);
-    }
-  });
+  try {
+    const [results, fields] = await pool.promise().query(`UPDATE account SET reputation=reputation - 1 WHERE userID="?"`, [userID])
+    return res.json(results)
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
 })
 
 
 // subtract one to user reputation
-app.put('/increment_user_rep', (req, res) => {
+app.put('/increment_user_rep', async (req, res) => {
   if (!req.body || Object.keys(req.body).length === 0) {
     return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
   }
   const {userID} = req.body
 
-  pool.query(`UPDATE account SET reputation = reputation + 1 WHERE userID = "${userID}"`, (err, user) => {
-    if (err) {
-        res.status(500).send('Server Error');
-    } else {
-        res.json(user);
-    }
-  });
+  try {
+    const [results, fields] = await pool.promise().query(`UPDATE account SET reputation = reputation + 1 WHERE userID=?`, [userID])
+    return res.json(results)
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
 })
 
 // Returns user data (including communities they're subbed to)
-app.get('/user', (req, res) => {
+app.get('/user', async (req, res) => {
   const {userID} = req.query; 
   
   const sqlStatement = `
@@ -134,20 +133,19 @@ app.get('/user', (req, res) => {
   FROM userCommunityRole
   JOIN account on account.userID = userCommunityRole.userID
   JOIN community on community.communityID = userCommunityRole.communityID
-  WHERE userCommunityRole.userID = ${userID}
+  WHERE userCommunityRole.userID = ?
   `
-
-  pool.query(sqlStatement, (err, user) => {
-    if (err) {
-        res.status(500).send('Server Error');
-    } else {
-        res.json(user);
-    }
-  });
+  try {
+    const [results, fields] = await pool.promise().query(sqlStatement, [userID])
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //Adds a community to the list of communities users are in
-app.post('/subscribeToCommunity', (req, res) => {
+app.post('/subscribeToCommunity', async (req, res) => {
   if (!req.body || Object.keys(req.body).length === 0) {
     return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
   }
@@ -160,49 +158,46 @@ app.post('/subscribeToCommunity', (req, res) => {
     communityID: communityID,
   }
 
-  pool.query('INSERT INTO userCommunityRole SET ?', subToComm, (error, results, fields) => {
-    if (error) {
-        console.error('An error occurred: ', error);
-        return res.status(500).send('An error has occured within the server')
-    }
-    res.sendStatus(201).send('Sucessfully subscribed user to community!')
-  });
+  try {
+    const [results, fields] =  await pool.promise().query('INSERT INTO userCommunityRole SET ?', [subToComm])
+    return res.sendStatus(201)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+
 });
 
 //Changes the profile picture of the user once profile has already been created
-app.put('/changeProfilePic', (req, res) => {
+app.put('/change_profile_pic', async (req, res) => {
   if (!req.body || Object.keys(req.body).length === 0) {
     return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
   }
   const {userID, photoURL} = req.body
-
-  // First we need to validate the req.query ngl
-  pool.query(`UPDATE account SET profilePicture = "${photoURL}" WHERE userID=${userID}`, (error, results, fields) => {
-    if (error) {
-        console.error('An error occurred: ', error);
-        return res.status(500).send('An error has occured within the server')
-    }
-    res.sendStatus(201).send('Successfully changed user profile picture :D')
-  });
-  
+  try {
+    const [results, fields] =  await pool.promise().query('UPDATE account SET profilePicture = ? WHERE userID = ?', [photoURL, userID])
+    return res.sendStatus(201)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //Deletes User
-app.delete('/user', (req, res) => {
+app.delete('/delete_user', async (req, res) => {
   if (!req.body || Object.keys(req.body).length === 0) {
     return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
   }
 
   const {userID} = req.body
-  
-  pool.query(`DELETE FROM account WHERE userID=${userID}`, (error, results, fields) => {
-    if (error) {
-        console.error('An error occurred: ', error);
-        return res.sendStatus(500).send('An error has occured within the server')
-    }
-    res.send(200).send('Successfully deleted user!')
-  });
 
+  try {
+    const [results, fields] =  await pool.promise().query('DELETE FROM account WHERE userID=?', [userID])
+    return res.sendStatus(201)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //////////////////////////////////////////////////////////////////////////////////////COMMUNITY\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
