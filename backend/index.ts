@@ -287,37 +287,98 @@ app.delete('/user', (req, res) => {
 
 //////////////////////////////////////////////////////////////////////////////////////Comments\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //Creates A Comment (no reply)
-app.post('/comment', (req, res) => {
-  const {userID, data, postID} = req.body;
+app.post('/comment', async (req, res) => {
+  // Ensuring we have a req.body
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.sendStatus(400);
+  }
+
+  const {userID, content, postID} = req.body;
+
+  const [results, fields] = await pool.promise().query('SELECT communityID FROM post WHERE postID = ?', [postID]);
+
+  const newComment = {
+    content: content,
+    reputation: 0,
+    communityID: results,
+    userID: userID,
+    postID: postID,
+  };
+
+  try {
+    await pool.promise().query(`INSERT INTO comment SET ?`, newComment)
+    
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
   // res -> status code
 });
 
 //Creates A Comment (as reply)
-app.post('/commentReply', (req, res) => {
-  const {userID, data, parentID} = req.body;
+app.post('/commentReply', async (req, res) => {
+  
+  
+  // Ensuring we have a req.body
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.sendStatus(400);
+  }
+
+  const {userID, content, parentID} = req.body;
+
+  try {
+
+    const communityID = await pool.promise().query('SELECT communityID FROM comment WHERE commentID = ?', [parentID]);
+    const postID = await pool.promise().query('SELECT postID FROM comment WHERE commentID = ?', [parentID]);
+
+    const newComment = {
+      content: content,
+      reputation: 0,
+      communityID: communityID,
+      userID: userID,
+      postID: postID,
+      parentID: parentID
+    };
+
+    await pool.promise().query(`INSERT INTO comment SET ?`, newComment)
+    
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
   // res -> status code
 });
 
 //Gets Comment
-app.get('/comment', (req, res) => {
+app.get('/comment', async (req, res) => {
   const {userID, commentID} = req.query;
   // res -> JSON object
 });
 
 //editsComment
-app.put('/editComment', (req, res) => {
-  const {userID, commentID, data} = req.query;
+app.put('/editComment', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+  const {userID, commentID, content} = req.query;
+  try {
+    const [results, fields] =  await pool.promise().query('UPDATE comment SET content = ? WHERE commentID = ?', [content, commentID])
+    return res.sendStatus(201)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
   // res -> status Code
 });
 
 //Upvotes Comment
-app.put('/upvoteComment', (req, res) => {
+app.put('/upvoteComment', async (req, res) => {
   const {userID, commentID} = req.query;
   // res -> status code
 });
 
 //Downvotes Comment
-app.put('/downvoteComment', (req, res) => {
+app.put('/downvoteComment', async (req, res) => {
   const {userID, commentID} = req.query;
   // res -> status code
 });
