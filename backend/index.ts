@@ -1,93 +1,203 @@
 require('dotenv').config()
-import express from "express";
+const bcrypt = require("bcrypt")
 const pool = require('./db/db.ts'); // Import the pool
+var bodyParser = require('body-parser')
+var jsonParser = bodyParser.json()
+
+import express from "express";
 import { Account, Comment, Post, UserCommunityRole, Community } from "./db/db_types";
+
+
 const app = express();
+app.use(jsonParser)
 const port = 3000;
 
-/*
-The whole point of this API is to let the frontend interact with the database, without having to do TOO much work
-Also making sure that only authorized users can do things with the data
-
-Routes --> what combination of http method + url do we need to achieve the functionality that we want
-routes would all go here
---> db connection and all taht goes out
---> auth stuff goes out
-
-Get --> read
-Post --> create
-patch/put --> update
-delete --> delete
-*/
-
-
-//////////////////////////////////////////////////////////////////////////////////////USER\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-//Creates A User Object
-app.post('/user', (req, res) => {
-  const {mail, password, username, profilePicture,} = req.body;
-  // res -> status code
-});
-
-//Returns user data
 //USER\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-app.get('/', (req, res) => {
-  // Insert a value into account, then we query it to see if we did good
-  // var newUser: Account = {
-  //   emailAddress: "chirayurai@gmail.com",
-  //   username: "chirayu",
-  //   password: "password123",
-  //   profilePicture: "https://google.com",
-  //   reputation: 1
-  // }
+// Creates user object in db
+app.post('/sign_up', async (req, res) => {
+  // Ensuring we have a req.body
+  if (!req.body || Object.keys(req.body).length === 0) {
+      return res.sendStatus(400);
+  }
 
-  // This will insert items into the db, will work on extracting types and all that
-  // pool.query('INSERT INTO account SET ?', newUser, (error, results, fields) => {
-  //   if (error) {
-  //       // Handle error after the release.
-  //       console.error('An error occurred: ', error);
-  //   }
+  // Gathering all the info
+  const { emailAddress, password, username, profilePicture } = req.body;
 
-  //   // Use the results here
-  //   console.log('Inserted Row ID:', results.insertId);
-  // });
+  try {
+      // Check to see if user already exists in the db
+      const [results, fields] = await pool.promise().query('SELECT emailAddress FROM account WHERE emailAddress = ?', [emailAddress]);
 
-  // How ot query every single item from db
-  pool.query('SELECT * FROM account', (err, accounts) => {
-    if (err) {
-        // Handle error
-        res.status(500).send('Server Error');
-    } else {
-        res.json(accounts);
-    }
+      if (results.length >= 1) {
+          return res.sendStatus(403); // User already exists
+      }
+
+      // User does not exist, proceed with password hashing and storing the new user
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      const newUser = {
+          emailAddress: emailAddress,
+          username: username,
+          password: hashedPassword,
+          profilePicture: profilePicture,
+          reputation: 0
+      };
+
+      // Insert user into db (with hashed password)
+      await pool.promise().query('INSERT INTO account SET ?', newUser);
+
+      return res.sendStatus(201); // Successfully created the user
+  } catch (error) {
+      console.error('An error occurred: ', error);
+      return res.sendStatus(500); // Internal server error
+  }
 });
 
+
+// Creates a user object (basically signs someone up)
+
+// Authenticates a user for logging in purposes
+app.post('/log_in', async (req, res) => {
+  // Ensuring we have a req.body
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.sendStatus(400)
+  }
+
+  const {emailAddress, password} = req.body;
+
+  try {
+    // Execute the query and wait for the result
+    const [results, fields] = await pool.promise().query(`SELECT * FROM account WHERE emailAddress = ?`, [emailAddress]);
+
+    if (results.length === 0) {
+        return res.status(403).send("Error: User does not exist in database");
+    }
+
+    const currUserInfo = results[0];
+
+    // Validate password
+    const isPasswordValid = await bcrypt.compare(password, currUserInfo.password);
+    if (!isPasswordValid) {
+        return res.status(401).send("Incorrect password for user");
+    }
+
+    // Now that we know the user has the correct log in info, we can send back their userID, which the frontend will use
+    return res.json({userID: currUserInfo.userID})
+
+  } catch (error) {
+      console.error('An error occurred: ', error);
+      return res.status(500).send('An error has occurred within the server');
+  }
+});
+
+// add one to user reputation
+app.put('/decrement_user_rep', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+  const {userID} = req.body
+
+  try {
+    const [results, fields] = await pool.promise().query(`UPDATE account SET reputation=reputation - 1 WHERE userID="?"`, [userID])
+    return res.json(results)
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
+})
+
+
+// subtract one to user reputation
+app.put('/increment_user_rep', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+  const {userID} = req.body
+
+  try {
+    const [results, fields] = await pool.promise().query(`UPDATE account SET reputation = reputation + 1 WHERE userID=?`, [userID])
+    return res.json(results)
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
 })
 
 // Returns user data (including communities they're subbed to)
-app.get('/user', (req, res) => {
+app.get('/user', async (req, res) => {
   const {userID} = req.query; 
-  //res -> json object
+  
+  const sqlStatement = `
+  SELECT account.emailAddress, account.username, account.profilePicture, account.reputation, community.name as communityName  
+  FROM userCommunityRole
+  JOIN account on account.userID = userCommunityRole.userID
+  JOIN community on community.communityID = userCommunityRole.communityID
+  WHERE userCommunityRole.userID = ?
+  `
+  try {
+    const [results, fields] = await pool.promise().query(sqlStatement, [userID])
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //Adds a community to the list of communities users are in
-app.put('/subscribeToCommunity', (req, res) => {
-  const {userID, communityID} = req.body
-  // res -> status code
+app.post('/subscribeToCommunity', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, communityID} = req.body;
+  
+  const subToComm:UserCommunityRole = {
+    role: "member",
+    userID: userID,
+    communityID: communityID,
+  }
+
+  try {
+    const [results, fields] =  await pool.promise().query('INSERT INTO userCommunityRole SET ?', [subToComm])
+    return res.sendStatus(201)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+
 });
 
 //Changes the profile picture of the user once profile has already been created
-app.put('/changeProfilePic', (req, res) => {
-  // do this things with that
+app.put('/change_profile_pic', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
   const {userID, photoURL} = req.body
-  // res -> status code
+  try {
+    const [results, fields] =  await pool.promise().query('UPDATE account SET profilePicture = ? WHERE userID = ?', [photoURL, userID])
+    return res.sendStatus(201)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //Deletes User
-app.delete('/user', (req, res) => {
+app.delete('/delete_user', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
   const {userID} = req.body
-  // res -> status code
+
+  try {
+    const [results, fields] =  await pool.promise().query('DELETE FROM account WHERE userID=?', [userID])
+    return res.sendStatus(201)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //////////////////////////////////////////////////////////////////////////////////////COMMUNITY\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
