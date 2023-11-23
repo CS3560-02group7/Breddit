@@ -1,6 +1,7 @@
 import { Input } from 'antd';
 function LoginForm() {
     return (
+        //body to make image and content flex
         <div className="h-screen flex">
         <img src="https://tastesbetterfromscratch.com/wp-content/uploads/2020/03/Bread-Recipe-5-2.jpg"/>
         <div className="h-screen flex items-center justify-center w-full bg-amber-700">
