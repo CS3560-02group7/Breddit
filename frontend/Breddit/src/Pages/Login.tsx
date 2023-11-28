@@ -5,7 +5,7 @@ function LoginForm() {
         <div className="h-screen flex">
         <img src="https://tastesbetterfromscratch.com/wp-content/uploads/2020/03/Bread-Recipe-5-2.jpg"/>
         <div className="h-screen flex items-center justify-center w-full bg-amber-700">
-        <div className="flex items-center justify-center flex-col h-3/5 w-2/5 bg-white rounded">
+        <div className="flex items-center justify-center flex-col h-fit w-fit p-10 bg-white rounded">
             <h1 className="text-3xl text-gray-900 dark:text-black mb-8"> Welcome to Breddit</h1>
             <form action="" method="get" className="login-form" style={{
             display:"flex",
