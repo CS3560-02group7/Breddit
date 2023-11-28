@@ -295,19 +295,26 @@ app.post('/comment', async (req, res) => {
 
   const {userID, content, postID} = req.body;
 
-  const [results, fields] = await pool.promise().query('SELECT communityID FROM post WHERE postID = ?', [postID]);
-
-  const newComment = {
-    content: content,
-    reputation: 0,
-    communityID: results,
-    userID: userID,
-    postID: postID,
-  };
-
   try {
+    const [communityIDRows, fields] = await pool.promise().query('SELECT communityID FROM post WHERE postID = ?', [postID]);
+
+    //handle when postID is not found in DB
+    if (communityIDRows.length === 0) {
+      return res.sendStatus(404);
+    }
+
+    const communityID = communityIDRows[0].communityID;
+
+    const newComment = {
+      content: content,
+      reputation: 0,
+      communityID: communityID,
+      userID: userID,
+      postID: postID
+    };
+
     await pool.promise().query(`INSERT INTO comment SET ?`, newComment)
-    
+    return res.sendStatus(201);
   } catch (err) {
     console.error(err)
     return res.sendStatus(500)
@@ -328,8 +335,16 @@ app.post('/commentReply', async (req, res) => {
 
   try {
 
-    const communityID = await pool.promise().query('SELECT communityID FROM comment WHERE commentID = ?', [parentID]);
-    const postID = await pool.promise().query('SELECT postID FROM comment WHERE commentID = ?', [parentID]);
+    const [result, fields] = await pool.promise().query('SELECT communityID, postID FROM comment WHERE commentID = ?', [parentID]);
+
+    //handle when commentID is not found in DB
+    if (result.length === 0) {
+      return res.sendStatus(404);
+    }
+
+    const communityID = result[0].communityID;
+    const postID = result[0].postID;
+
 
     const newComment = {
       content: content,
@@ -341,7 +356,7 @@ app.post('/commentReply', async (req, res) => {
     };
 
     await pool.promise().query(`INSERT INTO comment SET ?`, newComment)
-    
+    return res.sendStatus(201);
   } catch (err) {
     console.error(err)
     return res.sendStatus(500)
@@ -360,7 +375,7 @@ app.put('/editComment', async (req, res) => {
   if (!req.body || Object.keys(req.body).length === 0) {
     return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
   }
-  const {userID, commentID, content} = req.query;
+  const {userID, commentID, content} = req.body;
   try {
     const [results, fields] =  await pool.promise().query('UPDATE comment SET content = ? WHERE commentID = ?', [content, commentID])
     return res.sendStatus(201)
