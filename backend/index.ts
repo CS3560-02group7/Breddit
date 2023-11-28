@@ -370,39 +370,210 @@ app.delete('/user', (req, res) => {
 
 //////////////////////////////////////////////////////////////////////////////////////Comments\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //Creates A Comment (no reply)
-app.post('/comment', (req, res) => {
-  const {userID, data, postID} = req.body;
+app.post('/comment', async (req, res) => {
+  // Ensuring we have a req.body
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.sendStatus(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, content, postID, date} = req.body;
+
+  try {
+    const [communityIDRows, fields] = await pool.promise().query('SELECT communityID FROM post WHERE postID = ?', [postID]);
+
+    //handle when postID is not found in DB
+    if (communityIDRows.length === 0) {
+      return res.sendStatus(404);
+    }
+
+    const communityID = communityIDRows[0].communityID;
+
+    const newComment = {
+      content: content,
+      communityID: communityID,
+      userID: userID,
+      postID: postID,
+      date: date
+    };
+
+    await pool.promise().query(`INSERT INTO comment SET ?`, newComment)
+    return res.sendStatus(201);
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
   // res -> status code
 });
 
 //Creates A Comment (as reply)
-app.post('/commentReply', (req, res) => {
-  const {userID, data, parentID} = req.body;
+app.post('/commentReply', async (req, res) => {
+  // Ensuring we have a req.body
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.sendStatus(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, content, parentID, date} = req.body;
+
+  try {
+
+    const [result, fields] = await pool.promise().query('SELECT communityID, postID FROM comment WHERE commentID = ?', [parentID]);
+
+    //handle when commentID is not found in DB
+    if (result.length === 0) {
+      return res.sendStatus(404);
+    }
+
+    const communityID = result[0].communityID;
+    const postID = result[0].postID;
+
+
+    const newComment = {
+      content: content,
+      communityID: communityID,
+      userID: userID,
+      postID: postID,
+      parentID: parentID,
+      date: date
+    };
+
+    await pool.promise().query(`INSERT INTO comment SET ?`, newComment)
+    return res.sendStatus(201);
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
   // res -> status code
 });
 
 //Gets Comment
-app.get('/comment', (req, res) => {
-  const {userID, commentID} = req.query;
-  // res -> JSON object
+app.get('/comment', async (req, res) => {
+  const {userID, commentID} = req.query; 
+  
+  try {
+    const [results, fields] = await pool.promise().query(`SELECT * FROM commentWithReputation WHERE commentID = ?`, [commentID])
+    if (results.length === 0) {
+      return res.sendStatus(404);
+    }
+    return res.json(results[0])
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //editsComment
-app.put('/editComment', (req, res) => {
-  const {userID, commentID, data} = req.query;
+app.put('/editComment', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, commentID, content} = req.body;
+  
+  try {
+    const [results, fields] =  await pool.promise().query('UPDATE comment SET content = ? WHERE commentID = ?', [content, commentID])
+    if (results.length === 0) {
+      return res.sendStatus(404);
+    }
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
   // res -> status Code
 });
 
+//Deletes Comment
+app.delete('/deleteComment', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, commentID} = req.body
+
+  try {
+    const [results, fields] =  await pool.promise().query('DELETE FROM comment WHERE commentID = ?', [commentID])
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
 //Upvotes Comment
-app.put('/upvoteComment', (req, res) => {
-  const {userID, commentID} = req.query;
-  // res -> status code
+app.post('/upvoteComment', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+  const {userID, commentID} = req.body
+
+  
+
+  const newVote = {
+    userID: userID,
+    commentID:  commentID,
+    vote: 1
+  };
+
+  try {
+    const [results, fields] = await pool.promise().query('SELECT * FROM commentVote WHERE userID = ? AND commentID = ?', [userID, commentID]);
+
+    if (results.length >= 1) {
+      await pool.promise().query('UPDATE commentVote SET vote = 1 WHERE userID = ? AND commentID = ?', [userID, commentID])
+      return res.sendStatus(200); // Vote updated
+    }
+    await pool.promise().query('INSERT INTO commentVote SET ?', [newVote])
+    return res.sendStatus(201)
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
 });
 
 //Downvotes Comment
-app.put('/downvoteComment', (req, res) => {
-  const {userID, commentID} = req.query;
-  // res -> status code
+app.post('/downvoteComment', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+  const {userID, commentID} = req.body
+
+  
+
+  const newVote = {
+    userID: userID,
+    commentID:  commentID,
+    vote: -1
+  };
+
+  try {
+    const [results, fields] = await pool.promise().query('SELECT * FROM commentVote WHERE userID = ? AND commentID = ?', [userID, commentID]);
+
+    if (results.length >= 1) {
+      await pool.promise().query('UPDATE commentVote SET vote = -1 WHERE userID = ? AND commentID = ?', [userID, commentID])
+      return res.sendStatus(200); // Vote updated
+    }
+    await pool.promise().query('INSERT INTO commentVote SET ?', [newVote])
+    return res.sendStatus(201)
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
+});
+
+//Removes Vote on Comment
+app.delete('/removeCommentVote', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, commentID} = req.body
+
+  try {
+    const [results, fields] =  await pool.promise().query('DELETE FROM commentVote WHERE userID = ? AND commentID = ?', [userID, commentID])
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 /////////////////////////////////////////////////////////////////////////////NON CLASS RELATED ROUTES\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
