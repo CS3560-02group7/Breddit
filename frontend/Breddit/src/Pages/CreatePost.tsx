@@ -4,6 +4,9 @@ const { TextArea } = Input;
 import { DownOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { Dropdown, Space, Typography } from 'antd';
+import {useState, useEffect} from 'react';
+import axios from 'axios';
+
 
 
 const onChange = (value: string) => {
@@ -37,6 +40,26 @@ const items: MenuProps['items'] = [
 
 
 const CreatePost = () => {
+    interface communitySelection {value: string, label: string}
+    const [communities,getCommunities] = useState<communitySelection[]>([]);
+
+    useEffect( () => {
+        axios.get("http://localhost:3000/allCommunities").then(function (response) {
+            if (response.data){
+                const allCommunitiesJson = response.data
+                const formPrep : communitySelection[] = [];
+                for (let community in allCommunitiesJson){
+                    formPrep.push({value: allCommunitiesJson[community].name,
+                                   label: allCommunitiesJson[community].name})
+                }
+                getCommunities(formPrep)
+            }
+        })
+        .catch(function (error) {
+            alert(error);
+        });
+      },[]);
+
     return (
         <div className='bg-slate-500 h-screen flex align-middle justify-center'>
             <div className='w-1/3 m-auto bg-slate-300 p-10 rounded'>
@@ -49,20 +72,7 @@ const CreatePost = () => {
                     onChange={onChange}
                     onSearch={onSearch}
                     filterOption={filterOption}
-                    options={[
-                        {
-                            value: 'cpp',
-                            label: 'CPP',
-                        },
-                        {
-                            value: 'cali',
-                            label: 'Cali',
-                        },
-                        {
-                            value: 'la',
-                            label: 'LA',
-                        },
-                    ]}
+                    options={communities}
                 />
                 <form action="" method="get" className="login-form flex flex-col">
                     <div className="login-form">

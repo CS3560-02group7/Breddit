@@ -221,7 +221,7 @@ app.post('/community', async (req, res) => {
     const [results, fields] = await pool.promise().query('SELECT name FROM community WHERE name = ?', [communityName]);
 
     if (results.length >= 1) {
-        return res.sendStatus(403); // Community already exists
+        return res.sendStatus(403).send("Community Already Exists"); // Community already exists
     }
 
     // Community Exists, create the community
@@ -233,12 +233,13 @@ app.post('/community', async (req, res) => {
     };
 
     await pool.promise().query('INSERT INTO community SET ?', newCommunity);
-    const communityID = await pool.promise().query('SELECT commmunityID FROM community WHERE name = ?', [communityName]);
+    const communityID = await pool.promise().query('SELECT communityID FROM community WHERE name = ?', [communityName]);
+    console.log(communityID);
 
     const subToComm:UserCommunityRole = {
       role: "owner",
       userID: userID,
-      communityID: communityID,
+      communityID: communityID[0][0].communityID,
     }
   
     try {
@@ -249,8 +250,9 @@ app.post('/community', async (req, res) => {
       return res.sendStatus(500)
     }
 
-
     return res.sendStatus(201); // Successfully created the user
+
+
 
     //Create the user role and give it the role owner for this specific community
 
@@ -271,6 +273,21 @@ app.get('/community', async (req, res) => {
   WHERE communityID = ` + communityID;
   try {
     const [results, fields] = await pool.promise().query(sqlStatement, [communityID])
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//Returns a json of All Communities
+app.get('/allCommunities', async (req, res) => {
+  
+  const sqlStatement = `
+  SELECT *
+  FROM community;`
+  try {
+    const [results, fields] = await pool.promise().query(sqlStatement)
     return res.json(results)
   } catch (error) {
     console.error(error)
