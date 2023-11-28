@@ -202,22 +202,84 @@ app.delete('/delete_user', async (req, res) => {
 
 //////////////////////////////////////////////////////////////////////////////////////COMMUNITY\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-//Create A Community Object
-app.post('/community', (req, res) => {
+//Create A Community Object in db
+app.post('/community', async (req, res) => {
+  
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.sendStatus(400);
+  }
+
+  //Gather community info
   const {userID, communityName, description, picture} = req.body;
-  // res -> status code
+
+  try {
+    // Check to see if community already exists in the db
+    const [results, fields] = await pool.promise().query('SELECT name FROM community WHERE name = ?', [communityName]);
+
+    if (results.length >= 1) {
+        return res.sendStatus(403); // Community already exists
+    }
+
+    // Community Exists, create the community
+
+    const newCommunity = {
+        name: communityName,
+        description: description,
+        picture: picture
+    };
+
+    await pool.promise().query('INSERT INTO community SET ?', newCommunity);
+    const communityID = await pool.promise().query('SELECT commmunityID FROM community WHERE name = ?', [communityName]);
+
+    const subToComm:UserCommunityRole = {
+      role: "owner",
+      userID: userID,
+      communityID: communityID,
+    }
+  
+    try {
+      const [results, fields] =  await pool.promise().query('INSERT INTO userCommunityRole SET ?', [subToComm])
+      return res.sendStatus(201)
+    } catch (error) {
+      console.error(error)
+      return res.sendStatus(500)
+    }
+
+
+    return res.sendStatus(201); // Successfully created the user
+
+    //Create the user role and give it the role owner for this specific community
+
+
+  } catch (error) {
+      console.error('An error occurred: ', error);
+      return res.sendStatus(500); // Internal server error
+  }
 });
 
 //Gets the all the data from a community from the database
-app.get('/community', (req, res) => {
-  const {communityID} = req.query; 
-  // res -> json object
+app.get('/community', async (req, res) => {
+  const {communityID} = req.query;
+  
+  const sqlStatement = `
+  SELECT *
+  FROM community
+  WHERE communityID = ` + communityID;
+  try {
+    const [results, fields] = await pool.promise().query(sqlStatement, [communityID])
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //Allows moderators to edit description of community
 app.put('/editDescription', (req, res) => {
   const {userID, communityID, description} = req.query; 
+
   // res -> status code
+  
 });
 
 //Changes the profile picture of the community
@@ -321,6 +383,7 @@ app.put('/downvoteComment', (req, res) => {
   const {userID, commentID} = req.query;
   // res -> status code
 });
+
 /////////////////////////////////////////////////////////////////////////////NON CLASS RELATED ROUTES\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 app.get('/', (req, res) => {
