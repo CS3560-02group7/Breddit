@@ -12,6 +12,10 @@ const app = express();
 app.use(jsonParser)
 const port = 3000;
 
+//So We Don't Get Blocked
+var cors = require('cors')
+app.use(cors())
+
 //USER\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 // Creates user object in db
@@ -34,7 +38,7 @@ app.post('/sign_up', async (req, res) => {
 
       // User does not exist, proceed with password hashing and storing the new user
       const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
+      const hashedPassword = await bcrypt.hash(String(password), String(salt));
 
       const newUser = {
           emailAddress: emailAddress,
@@ -64,8 +68,8 @@ app.post('/log_in', async (req, res) => {
     return res.sendStatus(400)
   }
 
-  const {emailAddress, password} = req.body;
-
+  const password = req.body.password;
+  const emailAddress = req.body.email
   try {
     // Execute the query and wait for the result
     const [results, fields] = await pool.promise().query(`SELECT * FROM account WHERE emailAddress = ?`, [emailAddress]);
@@ -77,7 +81,7 @@ app.post('/log_in', async (req, res) => {
     const currUserInfo = results[0];
 
     // Validate password
-    const isPasswordValid = await bcrypt.compare(password, currUserInfo.password);
+    const isPasswordValid = await bcrypt.compare(String(password), String(currUserInfo.password));
     if (!isPasswordValid) {
         return res.status(401).send("Incorrect password for user");
     }
