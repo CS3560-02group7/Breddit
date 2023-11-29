@@ -7,7 +7,10 @@ import { Dropdown, Space, Typography } from 'antd';
 import createPostText from '../assets/createPostText.svg'
 import createPostImage from '../assets/image.svg'
 import createLinkImage from '../assets/link.svg'
-import React, { useState } from 'react'
+import {useState, useEffect} from 'react';
+import axios from 'axios';
+
+
 
 const onChange = (value: string) => {
     console.log(`selected ${value}`);
@@ -75,6 +78,25 @@ const CreatePost = () => {
             </div>
         )
     }
+    interface communitySelection {value: string, label: string}
+    const [communities,getCommunities] = useState<communitySelection[]>([]);
+
+    useEffect( () => {
+        axios.get("http://localhost:3000/allCommunities").then(function (response) {
+            if (response.data){
+                const allCommunitiesJson = response.data
+                const formPrep : communitySelection[] = [];
+                for (let community in allCommunitiesJson){
+                    formPrep.push({value: allCommunitiesJson[community].name,
+                                   label: allCommunitiesJson[community].name})
+                }
+                getCommunities(formPrep)
+            }
+        })
+        .catch(function (error) {
+            alert(error);
+        });
+      },[]);
 
     return (
         <div className='bg-slate-500 h-screen flex align-middle justify-center'>
@@ -88,20 +110,7 @@ const CreatePost = () => {
                     onChange={onChange}
                     onSearch={onSearch}
                     filterOption={filterOption}
-                    options={[
-                        {
-                            value: 'cpp',
-                            label: 'CPP',
-                        },
-                        {
-                            value: 'cali',
-                            label: 'Cali',
-                        },
-                        {
-                            value: 'la',
-                            label: 'LA',
-                        },
-                    ]}
+                    options={communities}
                 />
                 <div className='flex justify-around mt-3'>
                     <div onClick={regPost} className='border-y-2 border-l-2 py-5 w-full text-center rounded flex justify-center align-center items-center'>
