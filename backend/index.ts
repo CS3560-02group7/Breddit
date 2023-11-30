@@ -339,9 +339,19 @@ app.post('/post', (req, res) => {
 });
 
 //Gets Post Data
-app.get('/post', (req, res) => {
-  const {postID} = req.query;
-  // res -> JSON object
+app.get('/post', async (req, res) => {
+  const {postID} = req.query; 
+  
+  try {
+    const [results, fields] = await pool.promise().query(`SELECT * FROM postWithReputation WHERE postID = ?`, [postID])
+    if (results.length === 0) {
+      return res.sendStatus(404);
+    }
+    return res.json(results[0])
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //Edit Body Of Post
@@ -393,7 +403,7 @@ app.post('/comment', async (req, res) => {
       communityID: communityID,
       userID: userID,
       postID: postID,
-      date: date
+      datePosted: date
     };
 
     await pool.promise().query(`INSERT INTO comment SET ?`, newComment)
@@ -433,7 +443,7 @@ app.post('/commentReply', async (req, res) => {
       userID: userID,
       postID: postID,
       parentID: parentID,
-      date: date
+      datePosted: date
     };
 
     await pool.promise().query(`INSERT INTO comment SET ?`, newComment)
@@ -447,7 +457,7 @@ app.post('/commentReply', async (req, res) => {
 
 //Gets Comment
 app.get('/comment', async (req, res) => {
-  const {userID, commentID} = req.query; 
+  const {commentID} = req.query; 
   
   try {
     const [results, fields] = await pool.promise().query(`SELECT * FROM commentWithReputation WHERE commentID = ?`, [commentID])
@@ -467,7 +477,7 @@ app.put('/editComment', async (req, res) => {
     return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
   }
 
-  const {userID, commentID, content} = req.body;
+  const {commentID, content} = req.body;
   
   try {
     const [results, fields] =  await pool.promise().query('UPDATE comment SET content = ? WHERE commentID = ?', [content, commentID])
@@ -488,7 +498,7 @@ app.delete('/deleteComment', async (req, res) => {
     return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
   }
 
-  const {userID, commentID} = req.body
+  const {commentID} = req.body
 
   try {
     const [results, fields] =  await pool.promise().query('DELETE FROM comment WHERE commentID = ?', [commentID])
