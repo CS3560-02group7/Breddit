@@ -1,7 +1,6 @@
 const NotFound = () => {
     return (
         <>
-            <p>WE could not find that sadge :(</p>
             <div className="flex bg-zinc-900 h-screen justify-center items-center">
                 <div className="flex flex-col bg-zinc-800 w-1/4 h-1/3 rounded-lg items-center">
                     <div className="flex h-1/3 text-white items-center">
@@ -23,3 +22,5 @@ const NotFound = () => {
         </>
     )
 }
+
+export default NotFound;
