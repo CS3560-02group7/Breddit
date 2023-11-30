@@ -38,6 +38,14 @@ const items: MenuProps['items'] = [
         key: 'Wholesome',
         label: 'Wholesome',
     },
+    {
+        key: '18+',
+        label: '18+',
+    },
+    {
+        key: 'Spoiler',
+        label: 'Spoiler',
+    }
 ];
 
 
@@ -45,6 +53,13 @@ const items: MenuProps['items'] = [
 
 
 const CreatePost = () => {
+
+    interface postForm {userID: number, communityID: number, title: string, postType: string,body: string, flair: string}
+    const [formData, setFormData] = useState<postForm>({userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "posts", body: "", flair: ""})
+    interface communitySelection {value: string, label: string}
+    const [communities,getCommunities] = useState<communitySelection[]>([]);
+
+
     var createPostBody = (
         <div className="login-form">
             <TextArea rows={7} placeholder='Text(optional)' />
@@ -53,10 +68,23 @@ const CreatePost = () => {
 
     const [postBody, setPostBody] = useState(createPostBody)
 
+    function handleChange(e: { target: { name: any; value: any; }; }) {
+        const { name, value } = e.target;
+        setFormData({
+            ...formData,
+            [name]: value,
+        });
+        console.log(formData);
+    }
+
+    function handleOnSubmit(e: { preventDefault: () => void; }) {
+        e.preventDefault();
+    }
+    
     function regPost() {
         setPostBody(
             <div className="login-form">
-                <TextArea rows={7} placeholder='Text(optional)' />
+                <TextArea rows={7} placeholder='Text(optional)' onChange={handleChange} name="body"/>
             </div>
         )
     }
@@ -74,12 +102,10 @@ const CreatePost = () => {
     function linkPost() {
         setPostBody(
             <div className="login-form">
-                <TextArea rows={3} placeholder='Url' />
+                <TextArea rows={3} placeholder='Url' onChange={handleChange} name="body"/>
             </div>
         )
     }
-    interface communitySelection {value: string, label: string}
-    const [communities,getCommunities] = useState<communitySelection[]>([]);
 
     useEffect( () => {
         axios.get("http://localhost:3000/allCommunities").then(function (response) {
@@ -107,7 +133,7 @@ const CreatePost = () => {
                     showSearch
                     placeholder="Select a Community"
                     optionFilterProp="children"
-                    onChange={onChange}
+                    onChange={handleChange}
                     onSearch={onSearch}
                     filterOption={filterOption}
                     options={communities}
@@ -128,7 +154,7 @@ const CreatePost = () => {
                 </div>
                 <form action="" method="get" className="login-form flex flex-col">
                     <div className="login-form">
-                        <Input placeholder='Title' type="text" className="w-full my-2">
+                        <Input placeholder='Title' type="text" className="w-full my-2" onChange={handleChange}>
                         </Input>
                     </div>
 
@@ -140,7 +166,9 @@ const CreatePost = () => {
                             items,
                             selectable: true,
                             defaultSelectedKeys: ['3'],
+                            
                         }}
+                        
                     >
                         <Typography.Link>
                             <Space className='text-black'>
@@ -152,7 +180,7 @@ const CreatePost = () => {
 
 
                     <div className="login-form w-full">
-                        <button type="submit" className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded w-full mt-4">Post</button>
+                        <button type="button" className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded w-full mt-4" onClick = {handleOnSubmit}>Post</button>
                     </div>
                 </form>
             </div>
