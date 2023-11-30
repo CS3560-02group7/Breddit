@@ -7,7 +7,7 @@ import { Dropdown, Space, Typography } from 'antd';
 import createPostText from '../assets/createPostText.svg'
 import createPostImage from '../assets/image.svg'
 import createLinkImage from '../assets/link.svg'
-import {useState, useEffect} from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 
@@ -15,10 +15,10 @@ import axios from 'axios';
 
 const CreatePost = () => {
 
-    interface postForm {userID: number, communityID: number, title: string, postType: string,body: string, flair: string}
-    const [formData, setFormData] = useState<postForm>({userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "posts", body: "", flair: ""})
-    interface communitySelection {value: string, label: string}
-    const [communities,getCommunities] = useState<communitySelection[]>([]);
+    interface postForm { userID: number, communityID: number, title: string, postType: string, body: string, flair: string }
+    const [formData, setFormData] = useState<postForm>({ userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "posts", body: "", flair: "" })
+    interface communitySelection { value: string, label: string }
+    const [communities, getCommunities] = useState<communitySelection[]>([]);
 
     const onChangeCommunity = (value: string) => {
         console.log(`selected ${value}`);
@@ -91,11 +91,11 @@ const CreatePost = () => {
     function handleOnSubmit(e: { preventDefault: () => void; }) {
         e.preventDefault();
     }
-    
+
     function regPost() {
         setPostBody(
             <div className="login-form">
-                <TextArea rows={7} placeholder='Text(optional)' onChange={handleChange} name="body"/>
+                <TextArea rows={7} placeholder='Text(optional)' onChange={handleChange} name="body" />
             </div>
         )
     }
@@ -113,27 +113,29 @@ const CreatePost = () => {
     function linkPost() {
         setPostBody(
             <div className="login-form">
-                <TextArea rows={3} placeholder='Url' onChange={handleChange} name="body"/>
+                <TextArea rows={3} placeholder='Url' onChange={handleChange} name="body" />
             </div>
         )
     }
 
-    useEffect( () => {
+    useEffect(() => {
         axios.get("http://localhost:3000/allCommunities").then(function (response) {
-            if (response.data){
+            if (response.data) {
                 const allCommunitiesJson = response.data
-                const formPrep : communitySelection[] = [];
-                for (let community in allCommunitiesJson){
-                    formPrep.push({value: allCommunitiesJson[community].name,
-                                   label: allCommunitiesJson[community].name})
+                const formPrep: communitySelection[] = [];
+                for (let community in allCommunitiesJson) {
+                    formPrep.push({
+                        value: allCommunitiesJson[community].name,
+                        label: allCommunitiesJson[community].name
+                    })
                 }
                 getCommunities(formPrep)
             }
         })
-        .catch(function (error) {
-            alert(error);
-        });
-      },[]);
+            .catch(function (error) {
+                alert(error);
+            });
+    }, []);
 
     return (
         <div className='bg-slate-500 h-screen flex align-middle justify-center'>
@@ -173,26 +175,41 @@ const CreatePost = () => {
 
                     {postBody}
 
-                    <Dropdown className='rounded-full border-solid border-2 border-slate-400 w-fit mt-3 px-5 py-1'
-                        menu={{
-                            items,
-                            selectable: true,
-                            defaultSelectedKeys: ['3'],
-                            
-                        }}
-                        
-                    >
-                        <Typography.Link>
-                            <Space className='text-black'>
-                                Flair
-                                <DownOutlined />
-                            </Space>
-                        </Typography.Link>
-                    </Dropdown>
+                    <Select
+                        className='w-1/3 mt-3'
+                        showSearch
+                        placeholder="Select a Flair"
+                        optionFilterProp="children"
+                        onChange={onChange}
+                        onSearch={onSearch}
+                        filterOption={filterOption}
+                        options={[
+                            {
+                                value: 'funny',
+                                label: 'Funny',
+                            },
+                            {
+                                value: 'serious',
+                                label: 'Serious',
+                            },
+                            {
+                                value: 'wholesome',
+                                label: 'Wholesome',
+                            },
+                            {
+                                value: '18+',
+                                label: '18+',
+                            },
+                            {
+                                value: 'spolier',
+                                label: 'Spoiler',
+                            },
+                        ]}
+                    />
 
 
                     <div className="login-form w-full">
-                        <button type="button" className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded w-full mt-4" onClick = {handleOnSubmit}>Post</button>
+                        <button type="button" className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded w-full mt-4" onClick={handleOnSubmit}>Post</button>
                     </div>
                 </form>
             </div>
