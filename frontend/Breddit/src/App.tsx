@@ -8,6 +8,7 @@ import Community from './Pages/Community';
 import NotFound from './Pages/NotFound';
 import CreatePost from "./Pages/CreatePost";
 import UserProfile from "./Pages/UserProfile";
+import CreateCommunity from "./Pages/CreateCommunity";
 
 // TODO: Find a CSS library, or just use vanilla up to yall :)
 
@@ -49,7 +50,9 @@ function App() {
             <Route path="signup" element={<SignUp />} />
             <Route path="create_post" element={<CreatePost />} />
             <Route path="profile/:user" element={<UserProfile />} />
+            <Route path="create_community" element={<CreateCommunity />} />
             <Route path="*" element={<NotFound />} />
+
           </Route>
         </Routes>
       </BrowserRouter>
