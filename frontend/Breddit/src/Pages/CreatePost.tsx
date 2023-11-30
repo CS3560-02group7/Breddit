@@ -1,34 +1,33 @@
 import { Input } from 'antd';
 import { Select } from 'antd';
-const { TextArea } = Input;
-import { DownOutlined } from '@ant-design/icons';
-import type { MenuProps } from 'antd';
-import { Dropdown, Space, Typography } from 'antd';
 import createPostText from '../assets/createPostText.svg'
 import createPostImage from '../assets/image.svg'
 import createLinkImage from '../assets/link.svg'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, SetStateAction } from 'react';
 import axios from 'axios';
-
 
 
 
 const CreatePost = () => {
 
+    //All States/variables
     interface postForm { userID: number, communityID: number, title: string, postType: string, body: string, flair: string }
-    const [formData, setFormData] = useState<postForm>({ userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "posts", body: "", flair: "" })
+    const [formData, setFormData] = useState<postForm>({ userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "post", body: "", flair: "" })
     interface communitySelection { value: string, label: string }
     const [communities, getCommunities] = useState<communitySelection[]>([]);
+    const [postBody, setPostBody] = useState(
+        <div className="login-form">
+          <Input.TextArea rows={7} placeholder='Text(optional)' onChange={onChangeTextArea} name="body" />
+        </div>
+      );
 
-    const onChangeCommunity = (value: string) => {
-        console.log(`selected ${value}`);
-        axios.get("http://localhost:3000/communityID?name="+value).then(function (response) {
+    const onChangeCommunity = async (value: string) => {
+        await axios.get("http://localhost:3000/communityID?name="+value).then(function (response) {
                 if (response.data){
                     setFormData({
                         ...formData,
                         communityID: response.data[0].communityID
                     })
-                    response.data[0].communityID
                 }
             })
             .catch(function (error) {
@@ -37,70 +36,66 @@ const CreatePost = () => {
     };
 
     const onChangeFlair = (value: string) => {
-        console.log(`selected ${value}`);
+        setFormData({
+            ...formData,
+            flair: value,
+        });
     };
     
     const onSearch = (value: string) => {
         console.log('search:', value);
     };
     
-    // Filter `option.label` match the user type `input`
-    const filterOption = (input: string, option?: { label: string; value: string }) =>
-        (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
-    
-    
-    const items: MenuProps['items'] = [
-        {
-            key: 'funny',
-            label: 'Funny',
-        },
-        {
-            key: 'Serious',
-            label: 'Serious',
-        },
-        {
-            key: 'Wholesome',
-            label: 'Wholesome',
-        },
-        {
-            key: '18+',
-            label: '18+',
-        },
-        {
-            key: 'Spoiler',
-            label: 'Spoiler',
-        }
-    ];
-    var createPostBody = (
-        <div className="login-form">
-            <TextArea rows={7} placeholder='Text(optional)' />
-        </div>
-    )
-
-    const [postBody, setPostBody] = useState(createPostBody)
-
-    function handleChange(e: { target: { name: any; value: any; }; }) {
+    function onChangeTextArea(e: { target: { name: any; value: any; }; }) {
         const { name, value } = e.target;
+        console.log(formData);
         setFormData({
             ...formData,
             [name]: value,
         });
-        console.log(formData);
+    }
+
+    const filterOption = (input: string, option?: { label: string; value: string }) =>
+        (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
+
+    function handleChange(e: { target: { name: any; value: any; }; }) {
+        const { name, value } = e.target;
+        console.log
+        setFormData({
+            ...formData,
+            [name]: value,
+        });
     }
 
     function handleOnSubmit(e: { preventDefault: () => void; }) {
         e.preventDefault();
+        axios.post("http://localhost:3000/post",formData).then(function (response) {
+            if (response.data) {
+                console.log(response.data)
+            }
+        })
+            .catch(function (error) {
+                alert(error);
+            });
     }
 
     function regPost() {
+        setFormData({
+            ...formData,
+            postType: "post",
+        });
         setPostBody(
             <div className="login-form">
-                <TextArea rows={7} placeholder='Text(optional)' onChange={handleChange} name="body" />
+                <Input.TextArea rows={7} placeholder='Text(optional)' onChange={onChangeTextArea} name="body"/>
             </div>
         )
     }
 
     function postImage() {
+        setFormData({
+            ...formData,
+            postType: "image",
+        });
         setPostBody(
             <div className='border-dashed w-full border-2 border-slate-400 rounded flex justify-center items-center h-48'>
                 <div className=''>Drag and Drop Image </div>
@@ -111,9 +106,13 @@ const CreatePost = () => {
     }
 
     function linkPost() {
+        setFormData({
+            ...formData,
+            postType: "link",
+        });
         setPostBody(
             <div className="login-form">
-                <TextArea rows={3} placeholder='Url' onChange={handleChange} name="body" />
+                <Input.TextArea rows={3} placeholder='Url' onChange={onChangeTextArea} name="body" />
             </div>
         )
     }
@@ -168,7 +167,7 @@ const CreatePost = () => {
                 </div>
                 <form action="" method="get" className="login-form flex flex-col">
                     <div className="login-form">
-                        <Input placeholder='Title' type="text" className="w-full my-2" onChange={handleChange}>
+                        <Input placeholder='Title' type="text" className="w-full my-2" onChange={handleChange} name="title">
                         </Input>
                     </div>
 
@@ -180,7 +179,7 @@ const CreatePost = () => {
                         showSearch
                         placeholder="Select a Flair"
                         optionFilterProp="children"
-                        onChange={onChange}
+                        onChange={onChangeFlair}
                         onSearch={onSearch}
                         filterOption={filterOption}
                         options={[
