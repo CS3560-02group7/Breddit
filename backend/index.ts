@@ -263,7 +263,7 @@ app.post('/community', async (req, res) => {
   }
 });
 
-//Gets the all the data from a community from the database
+//Gets the all the data from a community from the database given communityID
 app.get('/community', async (req, res) => {
   const {communityID} = req.query;
   
@@ -273,6 +273,23 @@ app.get('/community', async (req, res) => {
   WHERE communityID = ` + communityID;
   try {
     const [results, fields] = await pool.promise().query(sqlStatement, [communityID])
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//Get communityID given name
+app.get('/communityID', async (req, res) => {
+  const {name} = req.query;
+  const sqlStatement = `
+  SELECT communityID
+  FROM community
+  WHERE name = ?`;
+  console.log(sqlStatement);
+  try {
+    const [results, fields] = await pool.promise().query(sqlStatement,[name]);
     return res.json(results)
   } catch (error) {
     console.error(error)

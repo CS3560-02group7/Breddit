@@ -12,45 +12,6 @@ import axios from 'axios';
 
 
 
-const onChange = (value: string) => {
-    console.log(`selected ${value}`);
-};
-
-const onSearch = (value: string) => {
-    console.log('search:', value);
-};
-
-// Filter `option.label` match the user type `input`
-const filterOption = (input: string, option?: { label: string; value: string }) =>
-    (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
-
-
-const items: MenuProps['items'] = [
-    {
-        key: 'funny',
-        label: 'Funny',
-    },
-    {
-        key: 'Serious',
-        label: 'Serious',
-    },
-    {
-        key: 'Wholesome',
-        label: 'Wholesome',
-    },
-    {
-        key: '18+',
-        label: '18+',
-    },
-    {
-        key: 'Spoiler',
-        label: 'Spoiler',
-    }
-];
-
-
-
-
 
 const CreatePost = () => {
 
@@ -59,7 +20,57 @@ const CreatePost = () => {
     interface communitySelection {value: string, label: string}
     const [communities,getCommunities] = useState<communitySelection[]>([]);
 
+    const onChangeCommunity = (value: string) => {
+        console.log(`selected ${value}`);
+        axios.get("http://localhost:3000/communityID?name="+value).then(function (response) {
+                if (response.data){
+                    setFormData({
+                        ...formData,
+                        communityID: response.data[0].communityID
+                    })
+                    response.data[0].communityID
+                }
+            })
+            .catch(function (error) {
+                alert(error);
+            });
+    };
 
+    const onChangeFlair = (value: string) => {
+        console.log(`selected ${value}`);
+    };
+    
+    const onSearch = (value: string) => {
+        console.log('search:', value);
+    };
+    
+    // Filter `option.label` match the user type `input`
+    const filterOption = (input: string, option?: { label: string; value: string }) =>
+        (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
+    
+    
+    const items: MenuProps['items'] = [
+        {
+            key: 'funny',
+            label: 'Funny',
+        },
+        {
+            key: 'Serious',
+            label: 'Serious',
+        },
+        {
+            key: 'Wholesome',
+            label: 'Wholesome',
+        },
+        {
+            key: '18+',
+            label: '18+',
+        },
+        {
+            key: 'Spoiler',
+            label: 'Spoiler',
+        }
+    ];
     var createPostBody = (
         <div className="login-form">
             <TextArea rows={7} placeholder='Text(optional)' />
@@ -133,10 +144,11 @@ const CreatePost = () => {
                     showSearch
                     placeholder="Select a Community"
                     optionFilterProp="children"
-                    onChange={handleChange}
+                    onChange={onChangeCommunity}
                     onSearch={onSearch}
                     filterOption={filterOption}
                     options={communities}
+                    value={this}
                 />
                 <div className='flex justify-around mt-3'>
                     <div onClick={regPost} className='border-y-2 border-l-2 py-5 w-full text-center rounded flex justify-center align-center items-center'>
