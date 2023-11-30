@@ -330,12 +330,37 @@ app.delete('/user', (req, res) => {
   // res -> status code
 });
 
-//////////////////////////////////////////////////////////////////////////////////////COMMUNITY\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////USERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 //Creates A Post
-app.post('/post', (req, res) => {
-  const {communityID,userID, title, type, body, tags} = req.body;
-  // res -> status code
+app.post('/post', async (req, res) => {
+
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.sendStatus(400);
+  }
+
+  const {communityID, userID, title, body, flair, postType} = req.body;
+
+  try {
+
+    const newPost = {
+        communityID: communityID,
+        userID: userID,
+        title: title,
+        postType: postType,
+        body: body,
+        flair: flair
+    };
+
+    await pool.promise().query('INSERT INTO post SET ?', newPost);
+
+    return res.sendStatus(201); // Successfully created the user
+
+
+  } catch (error) {
+      console.error('An error occurred: ', error);
+      return res.sendStatus(500); // Internal server error
+  }
 });
 
 //Gets Post Data
