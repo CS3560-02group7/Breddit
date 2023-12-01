@@ -6,7 +6,7 @@ const Layout = () => {
 
   return (
     <div>
-      <Header currCommunity="bread" logoSource="breadLogo" userID="bread" />
+      <Header currCommunity="BreadCommunity" logoSource="src\assets\bredditPlaceholderLogo.png" userID="breadUserID" />
       <Outlet />
     </div>
   );
