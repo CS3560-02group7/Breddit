@@ -26,7 +26,8 @@ app.post('/sign_up', async (req, res) => {
   }
 
   // Gathering all the info
-  const { emailAddress, password, username, profilePicture } = req.body;
+  const { password, username, profilePicture } = req.body;
+  const emailAddress = req.body.email;
 
   try {
       // Check to see if user already exists in the db
@@ -45,7 +46,7 @@ app.post('/sign_up', async (req, res) => {
           username: username,
           password: hashedPassword,
           profilePicture: profilePicture,
-          reputation: 0
+          //reputation: 0
       };
 
       // Insert user into db (with hashed password)
