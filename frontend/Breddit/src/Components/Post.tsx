@@ -21,7 +21,7 @@ export interface postProps {
 const Post = (props: postProps) => {
     const today = new Date();
     // const reputation = likes - dislikes;
-    const userName = 'lolzers'
+    const userName = 'lolzers' 
     return (
         <div className="bg-slate-400 w-[300px] h-fit p-5 m-3 rounded border-solid border-1 border-slate-900">
             <div className='flex align-middle items-center'>
