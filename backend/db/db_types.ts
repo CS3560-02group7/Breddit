@@ -33,8 +33,7 @@ export interface Post {
 }
 
 export interface UserCommunityRole {
-    id: number,
-    roleInCommunity: string,
+    role: string,
     userID: number,
     communityID: number
 }

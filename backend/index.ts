@@ -1,83 +1,725 @@
 require('dotenv').config()
-import express from "express";
+const bcrypt = require("bcrypt")
 const pool = require('./db/db.ts'); // Import the pool
+var bodyParser = require('body-parser')
+var jsonParser = bodyParser.json()
+
+import express from "express";
 import { Account, Comment, Post, UserCommunityRole, Community } from "./db/db_types";
+
+
 const app = express();
+app.use(jsonParser)
 const port = 3000;
 
-/*
-The whole point of this API is to let the frontend interact with the database, without having to do TOO much work
-Also making sure that only authorized users can do things with the data
-
-Routes --> what combination of http method + url do we need to achieve the functionality that we want
-routes would all go here
---> db connection and all taht goes out
---> auth stuff goes out
-
-Get --> read
-Post --> create
-patch/put --> update
-delete --> delete
-*/
-
+//So We Don't Get Blocked
+var cors = require('cors')
+app.use(cors())
 
 //USER\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-app.get('/', (req, res) => {
-  // Insert a value into account, then we query it to see if we did good
-  // var newUser: Account = {
-  //   emailAddress: "chirayurai@gmail.com",
-  //   username: "chirayu",
-  //   password: "password123",
-  //   profilePicture: "https://google.com",
-  //   reputation: 1
-  // }
+// Creates user object in db
+app.post('/sign_up', async (req, res) => {
+  // Ensuring we have a req.body
+  if (!req.body || Object.keys(req.body).length === 0) {
+      return res.sendStatus(400);
+  }
 
-  // This will insert items into the db, will work on extracting types and all that
-  // pool.query('INSERT INTO account SET ?', newUser, (error, results, fields) => {
-  //   if (error) {
-  //       // Handle error after the release.
-  //       console.error('An error occurred: ', error);
-  //   }
+  // Gathering all the info
+  const { password, username, profilePicture } = req.body;
+  const emailAddress = req.body.email;
 
-  //   // Use the results here
-  //   console.log('Inserted Row ID:', results.insertId);
-  // });
+  try {
+      // Check to see if user already exists in the db
+      const [results, fields] = await pool.promise().query('SELECT emailAddress FROM account WHERE emailAddress = ?', [emailAddress]);
 
-  // How ot query every single item from db
-  pool.query('SELECT * FROM account', (err, accounts) => {
-    if (err) {
-        // Handle error
-        res.status(500).send('Server Error');
-    } else {
-        res.json(accounts);
-    }
+      if (results.length >= 1) {
+          return res.sendStatus(403); // User already exists
+      }
+
+      // User does not exist, proceed with password hashing and storing the new user
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(String(password), String(salt));
+
+      const newUser = {
+          emailAddress: emailAddress,
+          username: username,
+          password: hashedPassword,
+          profilePicture: profilePicture,
+          //reputation: 0
+      };
+
+      // Insert user into db (with hashed password)
+      await pool.promise().query('INSERT INTO account SET ?', newUser);
+
+      return res.sendStatus(201); // Successfully created the user
+  } catch (error) {
+      console.error('An error occurred: ', error);
+      return res.sendStatus(500); // Internal server error
+  }
 });
 
+
+// Creates a user object (basically signs someone up)
+
+// Authenticates a user for logging in purposes
+app.post('/log_in', async (req, res) => {
+  // Ensuring we have a req.body
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.sendStatus(400)
+  }
+
+  const password = req.body.password;
+  const emailAddress = req.body.email
+  try {
+    // Execute the query and wait for the result
+    const [results, fields] = await pool.promise().query(`SELECT * FROM account WHERE emailAddress = ?`, [emailAddress]);
+
+    if (results.length === 0) {
+        return res.status(403).send("Error: User does not exist in database");
+    }
+
+    const currUserInfo = results[0];
+
+    // Validate password
+    const isPasswordValid = await bcrypt.compare(String(password), String(currUserInfo.password));
+    if (!isPasswordValid) {
+        return res.status(401).send("Incorrect password for user");
+    }
+
+    // Now that we know the user has the correct log in info, we can send back their userID, which the frontend will use
+    return res.json({userID: currUserInfo.userID})
+
+  } catch (error) {
+      console.error('An error occurred: ', error);
+      return res.status(500).send('An error has occurred within the server');
+  }
+});
+
+// add one to user reputation
+app.put('/decrement_user_rep', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+  const {userID} = req.body
+
+  try {
+    const [results, fields] = await pool.promise().query(`UPDATE account SET reputation=reputation - 1 WHERE userID="?"`, [userID])
+    return res.json(results)
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
+})
+
+
+// subtract one to user reputation
+app.put('/increment_user_rep', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+  const {userID} = req.body
+
+  try {
+    const [results, fields] = await pool.promise().query(`UPDATE account SET reputation = reputation + 1 WHERE userID=?`, [userID])
+    return res.json(results)
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
 })
 
 // Returns user data (including communities they're subbed to)
-app.get('/user', (req, res) => {
-  // this will determine the offset of how many posts to give the user
-  // we are NOT making it unique to each user, it's ok.
+app.get('/user', async (req, res) => {
   const {userID} = req.query; 
-  res.json({
-    0: ["25 post objects"]
-  })
+  
+  const sqlStatement = `
+  SELECT account.emailAddress, account.username, account.profilePicture, account.reputation, community.name as communityName  
+  FROM userCommunityRole
+  JOIN account on account.userID = userCommunityRole.userID
+  JOIN community on community.communityID = userCommunityRole.communityID
+  WHERE userCommunityRole.userID = ?
+  `
+  try {
+    const [results, fields] = await pool.promise().query(sqlStatement, [userID])
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //Adds a community to the list of communities users are in
-app.put('/subscribeToCommunity', (req, res) => {
+app.post('/subscribeToCommunity', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, communityID} = req.body;
+  
+  const subToComm:UserCommunityRole = {
+    role: "member",
+    userID: userID,
+    communityID: communityID,
+  }
+
+  try {
+    const [results, fields] =  await pool.promise().query('INSERT INTO userCommunityRole SET ?', [subToComm])
+    return res.sendStatus(201)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+
+});
+
+//Changes the profile picture of the user once profile has already been created
+app.put('/change_profile_pic', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+  const {userID, photoURL} = req.body
+  try {
+    const [results, fields] =  await pool.promise().query('UPDATE account SET profilePicture = ? WHERE userID = ?', [photoURL, userID])
+    return res.sendStatus(201)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//Deletes User
+app.delete('/delete_user', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID} = req.body
+
+  try {
+    const [results, fields] =  await pool.promise().query('DELETE FROM account WHERE userID=?', [userID])
+    return res.sendStatus(201)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//////////////////////////////////////////////////////////////////////////////////////COMMUNITY\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+//Create A Community Object in db
+app.post('/community', async (req, res) => {
+  
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.sendStatus(400);
+  }
+
+  //Gather community info
+  const {userID, communityName, description, picture} = req.body;
+
+  try {
+    // Check to see if community already exists in the db
+    const [results, fields] = await pool.promise().query('SELECT name FROM community WHERE name = ?', [communityName]);
+
+    if (results.length >= 1) {
+        return res.sendStatus(403).send("Community Already Exists"); // Community already exists
+    }
+
+    // Community Exists, create the community
+
+    const newCommunity = {
+        name: communityName,
+        description: description,
+        picture: picture
+    };
+
+    await pool.promise().query('INSERT INTO community SET ?', newCommunity);
+    const communityID = await pool.promise().query('SELECT communityID FROM community WHERE name = ?', [communityName]);
+    console.log(communityID);
+
+    const subToComm:UserCommunityRole = {
+      role: "owner",
+      userID: userID,
+      communityID: communityID[0][0].communityID,
+    }
+  
+    try {
+      const [results, fields] =  await pool.promise().query('INSERT INTO userCommunityRole SET ?', [subToComm])
+      return res.sendStatus(201)
+    } catch (error) {
+      console.error(error)
+      return res.sendStatus(500)
+    }
+
+    return res.sendStatus(201); // Successfully created the user
+
+
+
+    //Create the user role and give it the role owner for this specific community
+
+
+  } catch (error) {
+      console.error('An error occurred: ', error);
+      return res.sendStatus(500); // Internal server error
+  }
+});
+
+//Gets the all the data from a community from the database given communityID
+app.get('/community', async (req, res) => {
+  const {communityID} = req.query;
+  
+  const sqlStatement = `
+  SELECT *
+  FROM community
+  WHERE communityID = ` + communityID;
+  try {
+    const [results, fields] = await pool.promise().query(sqlStatement, [communityID])
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//Get communityID given name
+app.get('/communityID', async (req, res) => {
+  const {name} = req.query;
+  const sqlStatement = `
+  SELECT communityID
+  FROM community
+  WHERE name = ?`;
+  console.log(sqlStatement);
+  try {
+    const [results, fields] = await pool.promise().query(sqlStatement,[name]);
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//Returns a json of All Communities
+app.get('/allCommunities', async (req, res) => {
+  
+  const sqlStatement = `
+  SELECT *
+  FROM community;`
+  try {
+    const [results, fields] = await pool.promise().query(sqlStatement)
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//Allows moderators to edit description of community
+app.put('/editDescription', (req, res) => {
+  const {userID, communityID, description} = req.query; 
+
+  // res -> status code
+  
+});
+
+//Changes the profile picture of the community
+app.put('/changeCommunityPic', (req, res) => {
   // do this things with that
+  const {userID, communityID, photoURL} = req.body
+  // res -> status code
+});
+
+//Gives user moderator
+app.put('/makeMod', (req, res) => {
+  // do this things with that
+  const {communityID, userID} = req.body
+  // res -> status code
+});
+
+//Bans User From Community
+app.delete('/banUser', (req, res) => {
+  // do this things with that
+  const {communityID, userID} = req.body
+  // res -> status code
+});
+
+//Deletes Community
+app.delete('/user', (req, res) => {
   const {userID, communityID} = req.body
   // res -> status code
 });
 
-app.put('/changeProfilePic', (req, res) => {
-  // do this things with that
-  const {userID, photoURL} = req.body
+//////////////////////////////////////////////////////////////////////////////////////USERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+//Creates A Post
+app.post('/post', async (req, res) => {
+
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.sendStatus(400);
+  }
+
+  const {communityID, userID, title, body, flair, postType} = req.body;
+
+  try {
+
+    const newPost = {
+        communityID: communityID,
+        userID: userID,
+        title: title,
+        postType: postType,
+        body: body,
+        flair: flair
+    };
+
+    await pool.promise().query('INSERT INTO post SET ?', newPost);
+
+    return res.sendStatus(201); // Successfully created the user
+
+
+  } catch (error) {
+      console.error('An error occurred: ', error);
+      return res.sendStatus(500); // Internal server error
+  }
+});
+
+//Gets Post Data
+app.get('/post', async (req, res) => {
+  const {postID} = req.query; 
+  
+  try {
+    const [results, fields] = await pool.promise().query(`SELECT * FROM postWithReputation WHERE postID = ?`, [postID])
+    if (results.length === 0) {
+      return res.sendStatus(404);
+    }
+    return res.json(results[0])
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//Edit Body Of Post
+app.put('/editPost', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {postID, body, flair} = req.body;
+  
+  try {
+    const [results, fields] =  await pool.promise().query('UPDATE post SET body = ?, flair =? WHERE postID = ?', [body, flair, postID])
+    if (results.length === 0) {
+      return res.sendStatus(404);
+    }
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//Upvotes Post
+app.post('/upvotePost', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+  const {userID, postID} = req.body
+
+  
+
+  const newVote = {
+    userID: userID,
+    postID:  postID,
+    vote: 1
+  };
+
+  try {
+    const [results, fields] = await pool.promise().query('SELECT * FROM postVote WHERE userID = ? AND postID = ?', [userID, postID]);
+
+    if (results.length >= 1) {
+      await pool.promise().query('UPDATE postVote SET vote = 1 WHERE userID = ? AND postID = ?', [userID, postID])
+      return res.sendStatus(200); // Vote updated
+    }
+    await pool.promise().query('INSERT INTO postVote SET ?', [newVote])
+    return res.sendStatus(201)
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
+});
+
+//Downvotes Post
+app.post('/downvotePost', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+  const {userID, postID} = req.body
+
+  
+
+  const newVote = {
+    userID: userID,
+    postID:  postID,
+    vote: -1
+  };
+
+  try {
+    const [results, fields] = await pool.promise().query('SELECT * FROM postVote WHERE userID = ? AND postID = ?', [userID, postID]);
+
+    if (results.length >= 1) {
+      await pool.promise().query('UPDATE postVote SET vote = -1 WHERE userID = ? AND postID = ?', [userID, postID])
+      return res.sendStatus(200); // Vote updated
+    }
+    await pool.promise().query('INSERT INTO postVote SET ?', [newVote])
+    return res.sendStatus(201)
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
+});
+
+//Removes Vote on Post
+app.delete('/removeCommentVote', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, postID} = req.body
+
+  try {
+    const [results, fields] =  await pool.promise().query('DELETE FROM postVote WHERE userID = ? AND postID = ?', [userID, postID])
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//Deletes Post
+app.delete('/deletePost', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {postID} = req.body
+
+  try {
+    const [results, fields] =  await pool.promise().query('DELETE FROM post WHERE postID = ?', [postID])
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//////////////////////////////////////////////////////////////////////////////////////Comments\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//Creates A Comment (no reply)
+app.post('/comment', async (req, res) => {
+  // Ensuring we have a req.body
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.sendStatus(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, content, postID, date} = req.body;
+
+  try {
+    const [communityIDRows, fields] = await pool.promise().query('SELECT communityID FROM post WHERE postID = ?', [postID]);
+
+    //handle when postID is not found in DB
+    if (communityIDRows.length === 0) {
+      return res.sendStatus(404);
+    }
+
+    const communityID = communityIDRows[0].communityID;
+
+    const newComment = {
+      content: content,
+      communityID: communityID,
+      userID: userID,
+      postID: postID,
+      datePosted: date
+    };
+
+    await pool.promise().query(`INSERT INTO comment SET ?`, newComment)
+    return res.sendStatus(201);
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
   // res -> status code
 });
+
+//Creates A Comment (as reply)
+app.post('/commentReply', async (req, res) => {
+  // Ensuring we have a req.body
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.sendStatus(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, content, parentID, date} = req.body;
+
+  try {
+
+    const [result, fields] = await pool.promise().query('SELECT communityID, postID FROM comment WHERE commentID = ?', [parentID]);
+
+    //handle when commentID is not found in DB
+    if (result.length === 0) {
+      return res.sendStatus(404);
+    }
+
+    const communityID = result[0].communityID;
+    const postID = result[0].postID;
+
+
+    const newComment = {
+      content: content,
+      communityID: communityID,
+      userID: userID,
+      postID: postID,
+      parentID: parentID,
+      datePosted: date
+    };
+
+    await pool.promise().query(`INSERT INTO comment SET ?`, newComment)
+    return res.sendStatus(201);
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
+  // res -> status code
+});
+
+//Gets Comment
+app.get('/comment', async (req, res) => {
+  const {commentID} = req.query; 
+  
+  try {
+    const [results, fields] = await pool.promise().query(`SELECT * FROM commentWithReputation WHERE commentID = ?`, [commentID])
+    if (results.length === 0) {
+      return res.sendStatus(404);
+    }
+    return res.json(results[0])
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//editsComment
+app.put('/editComment', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {commentID, content} = req.body;
+  
+  try {
+    const [results, fields] =  await pool.promise().query('UPDATE comment SET content = ? WHERE commentID = ?', [content, commentID])
+    if (results.length === 0) {
+      return res.sendStatus(404);
+    }
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+  // res -> status Code
+});
+
+//Deletes Comment
+app.delete('/deleteComment', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {commentID} = req.body
+
+  try {
+    const [results, fields] =  await pool.promise().query('DELETE FROM comment WHERE commentID = ?', [commentID])
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//Upvotes Comment
+app.post('/upvoteComment', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+  const {userID, commentID} = req.body
+
+  
+
+  const newVote = {
+    userID: userID,
+    commentID:  commentID,
+    vote: 1
+  };
+
+  try {
+    const [results, fields] = await pool.promise().query('SELECT * FROM commentVote WHERE userID = ? AND commentID = ?', [userID, commentID]);
+
+    if (results.length >= 1) {
+      await pool.promise().query('UPDATE commentVote SET vote = 1 WHERE userID = ? AND commentID = ?', [userID, commentID])
+      return res.sendStatus(200); // Vote updated
+    }
+    await pool.promise().query('INSERT INTO commentVote SET ?', [newVote])
+    return res.sendStatus(201)
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
+});
+
+//Downvotes Comment
+app.post('/downvoteComment', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+  const {userID, commentID} = req.body
+
+  
+
+  const newVote = {
+    userID: userID,
+    commentID:  commentID,
+    vote: -1
+  };
+
+  try {
+    const [results, fields] = await pool.promise().query('SELECT * FROM commentVote WHERE userID = ? AND commentID = ?', [userID, commentID]);
+
+    if (results.length >= 1) {
+      await pool.promise().query('UPDATE commentVote SET vote = -1 WHERE userID = ? AND commentID = ?', [userID, commentID])
+      return res.sendStatus(200); // Vote updated
+    }
+    await pool.promise().query('INSERT INTO commentVote SET ?', [newVote])
+    return res.sendStatus(201)
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
+});
+
+//Removes Vote on Comment
+app.delete('/removeCommentVote', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, commentID} = req.body
+
+  try {
+    const [results, fields] =  await pool.promise().query('DELETE FROM commentVote WHERE userID = ? AND commentID = ?', [userID, commentID])
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+/////////////////////////////////////////////////////////////////////////////NON CLASS RELATED ROUTES\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 app.get('/', (req, res) => {
   // do this things with that
@@ -87,38 +729,6 @@ app.get('/', (req, res) => {
 app.get('/home', (req, res) => {
   // do this things with that
   res.send("We did it")
-});
-
-app.get('/home', (req, res) => {
-  // this will determine the offset of how many posts to give the user
-  // we are NOT making it unique to each user, it's ok.
-  const ind = req.query["index"];
-  res.json({
-    0: ["25 post objects"]
-  })
-});
-
-// route to show the posts in a community based on some offset
-app.get('/comm', (req, res) => {
-  // this will determine the offset of how many posts to give the user
-  // we are NOT making it unique to each user, it's ok.
-
-  // const community = req.params.community;
-  // const ind = req.params.index;
-  res.json({
-    0: ["25 post objects"]
-  })
-});
-
-// returns users communities
-app.get('user/:userID/communities', (req, res) => {
-  // this will determine the offset of how many posts to give the user
-  // we are NOT making it unique to each user, it's ok.
-
-  // const id = req.params.userID; 
-  res.json({
-    0: ["25 post objects"]
-  })
 });
 
 app.post('/login', (req, res) => {
@@ -132,6 +742,27 @@ app.post('/signup', (req, res) => {
   const data = req.body;
   res.send('Signed up!');
 });
+
+app.get('/home', (req, res) => {
+  // this will determine the offset of how many posts to give the user
+  // we are NOT making it unique to each user, it's ok.
+  const ind = req.query["index"];
+  res.json({
+    0: ["25 post objects"]
+  })
+});
+
+// route to show the posts in a community based on some offset
+//Currently Not Working
+/*app.get('/comm', (req, res) => {
+  // this will determine the offset of how many posts to give the user
+  // we are NOT making it unique to each user, it's ok.
+  const community = req.params.community;
+  const ind = req.params.index;
+  res.json({
+    0: ["25 post objects"]
+  })
+});*/
 
 app.listen(port, () => {
   // tslint:disable-next-line:no-console
