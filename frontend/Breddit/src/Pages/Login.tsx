@@ -53,7 +53,7 @@ function LoginForm(){
             justifyContent: "center",
             flexFlow: "column"}}>
                 <div className="login-form w-3/4">
-                    <input
+                    <Input
                         type="email"
                         name="email"
                         value={formData.email}
@@ -63,7 +63,7 @@ function LoginForm(){
                     />
                 </div>
                 <div className="login-form w-3/4">
-                    <input
+                    <Input
                         type="password"
                         name="password"
                         value={formData.password}

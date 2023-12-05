@@ -26,7 +26,8 @@ app.post('/sign_up', async (req, res) => {
   }
 
   // Gathering all the info
-  const { emailAddress, password, username, profilePicture } = req.body;
+  const { password, username, profilePicture } = req.body;
+  const emailAddress = req.body.email;
 
   try {
       // Check to see if user already exists in the db
@@ -45,7 +46,7 @@ app.post('/sign_up', async (req, res) => {
           username: username,
           password: hashedPassword,
           profilePicture: profilePicture,
-          reputation: 0
+          //reputation: 0
       };
 
       // Insert user into db (with hashed password)
@@ -263,7 +264,7 @@ app.post('/community', async (req, res) => {
   }
 });
 
-//Gets the all the data from a community from the database
+//Gets the all the data from a community from the database given communityID
 app.get('/community', async (req, res) => {
   const {communityID} = req.query;
   
@@ -273,6 +274,23 @@ app.get('/community', async (req, res) => {
   WHERE communityID = ` + communityID;
   try {
     const [results, fields] = await pool.promise().query(sqlStatement, [communityID])
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//Get communityID given name
+app.get('/communityID', async (req, res) => {
+  const {name} = req.query;
+  const sqlStatement = `
+  SELECT communityID
+  FROM community
+  WHERE name = ?`;
+  console.log(sqlStatement);
+  try {
+    const [results, fields] = await pool.promise().query(sqlStatement,[name]);
     return res.json(results)
   } catch (error) {
     console.error(error)
@@ -330,42 +348,167 @@ app.delete('/user', (req, res) => {
   // res -> status code
 });
 
-//////////////////////////////////////////////////////////////////////////////////////COMMUNITY\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////USERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 //Creates A Post
-app.post('/post', (req, res) => {
-  const {communityID,userID, title, type, body, tags} = req.body;
-  // res -> status code
+app.post('/post', async (req, res) => {
+
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.sendStatus(400);
+  }
+
+  const {communityID, userID, title, body, flair, postType} = req.body;
+
+  try {
+
+    const newPost = {
+        communityID: communityID,
+        userID: userID,
+        title: title,
+        postType: postType,
+        body: body,
+        flair: flair
+    };
+
+    await pool.promise().query('INSERT INTO post SET ?', newPost);
+
+    return res.sendStatus(201); // Successfully created the user
+
+
+  } catch (error) {
+      console.error('An error occurred: ', error);
+      return res.sendStatus(500); // Internal server error
+  }
 });
 
 //Gets Post Data
-app.get('/post', (req, res) => {
-  const {postID} = req.query;
-  // res -> JSON object
+app.get('/post', async (req, res) => {
+  const {postID} = req.query; 
+  
+  try {
+    const [results, fields] = await pool.promise().query(`SELECT * FROM postWithReputation WHERE postID = ?`, [postID])
+    if (results.length === 0) {
+      return res.sendStatus(404);
+    }
+    return res.json(results[0])
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //Edit Body Of Post
-app.put('/post', (req, res) => {
-  const {userID, postID, data, tags} = req.query;
-  // res -> status code
+app.put('/editPost', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {postID, body, flair} = req.body;
+  
+  try {
+    const [results, fields] =  await pool.promise().query('UPDATE post SET body = ?, flair =? WHERE postID = ?', [body, flair, postID])
+    if (results.length === 0) {
+      return res.sendStatus(404);
+    }
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //Upvotes Post
-app.put('/upvotePost', (req, res) => {
-  const {userID,postID} = req.query;
-  // res -> status code
+app.post('/upvotePost', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+  const {userID, postID} = req.body
+
+  
+
+  const newVote = {
+    userID: userID,
+    postID:  postID,
+    vote: 1
+  };
+
+  try {
+    const [results, fields] = await pool.promise().query('SELECT * FROM postVote WHERE userID = ? AND postID = ?', [userID, postID]);
+
+    if (results.length >= 1) {
+      await pool.promise().query('UPDATE postVote SET vote = 1 WHERE userID = ? AND postID = ?', [userID, postID])
+      return res.sendStatus(200); // Vote updated
+    }
+    await pool.promise().query('INSERT INTO postVote SET ?', [newVote])
+    return res.sendStatus(201)
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
 });
 
 //Downvotes Post
-app.put('/downvotePost', (req, res) => {
-  const {userID, postID} = req.query;
-  // res -> status code
+app.post('/downvotePost', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+  const {userID, postID} = req.body
+
+  
+
+  const newVote = {
+    userID: userID,
+    postID:  postID,
+    vote: -1
+  };
+
+  try {
+    const [results, fields] = await pool.promise().query('SELECT * FROM postVote WHERE userID = ? AND postID = ?', [userID, postID]);
+
+    if (results.length >= 1) {
+      await pool.promise().query('UPDATE postVote SET vote = -1 WHERE userID = ? AND postID = ?', [userID, postID])
+      return res.sendStatus(200); // Vote updated
+    }
+    await pool.promise().query('INSERT INTO postVote SET ?', [newVote])
+    return res.sendStatus(201)
+  } catch (err) {
+    console.error(err)
+    return res.sendStatus(500)
+  }
+});
+
+//Removes Vote on Post
+app.delete('/removeCommentVote', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, postID} = req.body
+
+  try {
+    const [results, fields] =  await pool.promise().query('DELETE FROM postVote WHERE userID = ? AND postID = ?', [userID, postID])
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //Deletes Post
-app.delete('/user', (req, res) => {
-  const {userID, postID} = req.body
-  // res -> status code
+app.delete('/deletePost', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {postID} = req.body
+
+  try {
+    const [results, fields] =  await pool.promise().query('DELETE FROM post WHERE postID = ?', [postID])
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //////////////////////////////////////////////////////////////////////////////////////Comments\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -393,7 +536,7 @@ app.post('/comment', async (req, res) => {
       communityID: communityID,
       userID: userID,
       postID: postID,
-      date: date
+      datePosted: date
     };
 
     await pool.promise().query(`INSERT INTO comment SET ?`, newComment)
@@ -433,7 +576,7 @@ app.post('/commentReply', async (req, res) => {
       userID: userID,
       postID: postID,
       parentID: parentID,
-      date: date
+      datePosted: date
     };
 
     await pool.promise().query(`INSERT INTO comment SET ?`, newComment)
@@ -447,7 +590,7 @@ app.post('/commentReply', async (req, res) => {
 
 //Gets Comment
 app.get('/comment', async (req, res) => {
-  const {userID, commentID} = req.query; 
+  const {commentID} = req.query; 
   
   try {
     const [results, fields] = await pool.promise().query(`SELECT * FROM commentWithReputation WHERE commentID = ?`, [commentID])
@@ -467,7 +610,7 @@ app.put('/editComment', async (req, res) => {
     return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
   }
 
-  const {userID, commentID, content} = req.body;
+  const {commentID, content} = req.body;
   
   try {
     const [results, fields] =  await pool.promise().query('UPDATE comment SET content = ? WHERE commentID = ?', [content, commentID])
@@ -488,7 +631,7 @@ app.delete('/deleteComment', async (req, res) => {
     return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
   }
 
-  const {userID, commentID} = req.body
+  const {commentID} = req.body
 
   try {
     const [results, fields] =  await pool.promise().query('DELETE FROM comment WHERE commentID = ?', [commentID])

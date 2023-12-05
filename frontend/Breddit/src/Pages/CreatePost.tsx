@@ -1,67 +1,101 @@
 import { Input } from 'antd';
 import { Select } from 'antd';
-const { TextArea } = Input;
-import { DownOutlined } from '@ant-design/icons';
-import type { MenuProps } from 'antd';
-import { Dropdown, Space, Typography } from 'antd';
 import createPostText from '../assets/createPostText.svg'
 import createPostImage from '../assets/image.svg'
 import createLinkImage from '../assets/link.svg'
-import {useState, useEffect} from 'react';
+import { useState, useEffect, SetStateAction } from 'react';
 import axios from 'axios';
 
 
 
-const onChange = (value: string) => {
-    console.log(`selected ${value}`);
-};
-
-const onSearch = (value: string) => {
-    console.log('search:', value);
-};
-
-// Filter `option.label` match the user type `input`
-const filterOption = (input: string, option?: { label: string; value: string }) =>
-    (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
-
-
-const items: MenuProps['items'] = [
-    {
-        key: 'funny',
-        label: 'Funny',
-    },
-    {
-        key: 'Serious',
-        label: 'Serious',
-    },
-    {
-        key: 'Wholesome',
-        label: 'Wholesome',
-    },
-];
-
-
-
-
-
 const CreatePost = () => {
-    var createPostBody = (
-        <div className="login-form">
-            <TextArea rows={7} placeholder='Text(optional)' />
-        </div>
-    )
 
-    const [postBody, setPostBody] = useState(createPostBody)
+    //All States/variables
+    interface postForm { userID: number, communityID: number, title: string, postType: string, body: string, flair: string }
+    const [formData, setFormData] = useState<postForm>({ userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "post", body: "", flair: "" })
+    interface communitySelection { value: string, label: string }
+    const [communities, getCommunities] = useState<communitySelection[]>([]);
+    const [postBody, setPostBody] = useState(
+        <div className="login-form">
+          <Input.TextArea rows={7} placeholder='Text(optional)' onChange={onChangeTextArea} name="body" />
+        </div>
+      );
+
+    const onChangeCommunity = async (value: string) => {
+        await axios.get("http://localhost:3000/communityID?name="+value).then(function (response) {
+                if (response.data){
+                    setFormData({
+                        ...formData,
+                        communityID: response.data[0].communityID
+                    })
+                }
+            })
+            .catch(function (error) {
+                alert(error);
+            });
+    };
+
+    const onChangeFlair = (value: string) => {
+        setFormData({
+            ...formData,
+            flair: value,
+        });
+    };
+    
+    const onSearch = (value: string) => {
+        console.log('search:', value);
+    };
+    
+    function onChangeTextArea(e: { target: { name: any; value: any; }; }) {
+        const { name, value } = e.target;
+        console.log(formData);
+        setFormData({
+            ...formData,
+            [name]: value,
+        });
+    }
+
+    const filterOption = (input: string, option?: { label: string; value: string }) =>
+        (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
+
+    function handleChange(e: { target: { name: any; value: any; }; }) {
+        const { name, value } = e.target;
+        console.log
+        setFormData({
+            ...formData,
+            [name]: value,
+        });
+    }
+
+    function handleOnSubmit(e: { preventDefault: () => void; }) {
+        e.preventDefault();
+        axios.post("http://localhost:3000/post",formData).then(function (response) {
+            if (response.data) {
+                console.log(response.data)
+            }
+        })
+            .catch(function (error) {
+                alert(error);
+            });
+    }
 
     function regPost() {
+        setFormData({
+            ...formData,
+            postType: "post",
+        });
         setPostBody(
             <div className="login-form">
-                <TextArea rows={7} placeholder='Text(optional)' />
+                <Input.TextArea rows={7} placeholder='Text(optional)' onChange={onChangeTextArea} name="body"/>
             </div>
         )
     }
 
     function postImage() {
+        setFormData({
+            ...formData,
+            postType: "image",
+        });
         setPostBody(
             <div className='border-dashed w-full border-2 border-slate-400 rounded flex justify-center items-center h-48'>
                 <div className=''>Drag and Drop Image </div>
@@ -72,31 +106,35 @@ const CreatePost = () => {
     }
 
     function linkPost() {
+        setFormData({
+            ...formData,
+            postType: "link",
+        });
         setPostBody(
             <div className="login-form">
-                <TextArea rows={3} placeholder='Url' />
+                <Input.TextArea rows={3} placeholder='Url' onChange={onChangeTextArea} name="body" />
             </div>
         )
     }
-    interface communitySelection {value: string, label: string}
-    const [communities,getCommunities] = useState<communitySelection[]>([]);
 
-    useEffect( () => {
+    useEffect(() => {
         axios.get("http://localhost:3000/allCommunities").then(function (response) {
-            if (response.data){
+            if (response.data) {
                 const allCommunitiesJson = response.data
-                const formPrep : communitySelection[] = [];
-                for (let community in allCommunitiesJson){
-                    formPrep.push({value: allCommunitiesJson[community].name,
-                                   label: allCommunitiesJson[community].name})
+                const formPrep: communitySelection[] = [];
+                for (let community in allCommunitiesJson) {
+                    formPrep.push({
+                        value: allCommunitiesJson[community].name,
+                        label: allCommunitiesJson[community].name
+                    })
                 }
                 getCommunities(formPrep)
             }
         })
-        .catch(function (error) {
-            alert(error);
-        });
-      },[]);
+            .catch(function (error) {
+                alert(error);
+            });
+    }, []);
 
     return (
         <div className='bg-slate-500 h-screen flex align-middle justify-center'>
@@ -107,10 +145,11 @@ const CreatePost = () => {
                     showSearch
                     placeholder="Select a Community"
                     optionFilterProp="children"
-                    onChange={onChange}
+                    onChange={onChangeCommunity}
                     onSearch={onSearch}
                     filterOption={filterOption}
                     options={communities}
+                    value={this}
                 />
                 <div className='flex justify-around mt-3'>
                     <div onClick={regPost} className='border-y-2 border-l-2 py-5 w-full text-center rounded flex justify-center align-center items-center'>
@@ -128,31 +167,48 @@ const CreatePost = () => {
                 </div>
                 <form action="" method="get" className="login-form flex flex-col">
                     <div className="login-form">
-                        <Input placeholder='Title' type="text" className="w-full my-2">
+                        <Input placeholder='Title' type="text" className="w-full my-2" onChange={handleChange} name="title">
                         </Input>
                     </div>
 
 
                     {postBody}
 
-                    <Dropdown className='rounded-full border-solid border-2 border-slate-400 w-fit mt-3 px-5 py-1'
-                        menu={{
-                            items,
-                            selectable: true,
-                            defaultSelectedKeys: ['3'],
-                        }}
-                    >
-                        <Typography.Link>
-                            <Space className='text-black'>
-                                Flair
-                                <DownOutlined />
-                            </Space>
-                        </Typography.Link>
-                    </Dropdown>
+                    <Select
+                        className='w-1/3 mt-3'
+                        showSearch
+                        placeholder="Select a Flair"
+                        optionFilterProp="children"
+                        onChange={onChangeFlair}
+                        onSearch={onSearch}
+                        filterOption={filterOption}
+                        options={[
+                            {
+                                value: 'funny',
+                                label: 'Funny',
+                            },
+                            {
+                                value: 'serious',
+                                label: 'Serious',
+                            },
+                            {
+                                value: 'wholesome',
+                                label: 'Wholesome',
+                            },
+                            {
+                                value: '18+',
+                                label: '18+',
+                            },
+                            {
+                                value: 'spolier',
+                                label: 'Spoiler',
+                            },
+                        ]}
+                    />
 
 
                     <div className="login-form w-full">
-                        <button type="submit" className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded w-full mt-4">Post</button>
+                        <button type="button" className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded w-full mt-4" onClick={handleOnSubmit}>Post</button>
                     </div>
                 </form>
             </div>
