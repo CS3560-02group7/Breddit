@@ -11,8 +11,8 @@ import axios from 'axios';
 const CreatePost = () => {
 
     //All States/variables
-    interface postForm { userID: number, communityID: number, title: string, postType: string, body: string, flair: string }
-    const [formData, setFormData] = useState<postForm>({ userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "post", body: "", flair: "" })
+    interface postForm { userID: number, communityID: number, title: string, postType: string, body: string, flair: string, }
+    const [formData, setFormData] = useState<postForm>({ userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "post", body: "", flair: ""})
     interface communitySelection { value: string, label: string }
     const [communities, getCommunities] = useState<communitySelection[]>([]);
     const [postBody, setPostBody] = useState(
@@ -91,16 +91,46 @@ const CreatePost = () => {
         )
     }
 
+    
+    const ImageUploadComponent: React.FC = () => {
+        const [base64String, setBase64String] = useState<string>('');
+      
+        const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+          const file = event.target.files ? event.target.files[0] : null;
+          if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const base64 = reader.result as string;
+              setBase64String(base64);
+            };
+            reader.readAsDataURL(file);
+          }
+
+        };
+      
+        useEffect(() => {
+            setFormData({
+                ...formData,
+                body: base64String
+            });
+        }, [base64String])
+        return (
+          <div>
+            <input type="file" accept="image/*" onChange={handleFileChange} /> 
+          </div>
+        );
+      };
+
+
     function postImage() {
         setFormData({
             ...formData,
             postType: "image",
         });
         setPostBody(
-            <div className='border-dashed w-full border-2 border-slate-400 rounded flex justify-center items-center h-48'>
-                <div className=''>Drag and Drop Image </div>
-                <button className='rounded-full border-solid border-2 border-slate-400 w-fit mt-3 px-5 py-1 mb-2 ml-2'>Upload</button>
-            </div>
+        <div className='border-dashed w-full border-2 border-slate-400 rounded flex justify-center items-center h-48'>
+            <ImageUploadComponent/>
+        </div>
 
         )
     }

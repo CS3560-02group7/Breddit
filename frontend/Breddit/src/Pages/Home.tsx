@@ -1,7 +1,36 @@
 import Post from '../Components/Post.tsx'
 import Comment from '../Components/Comment.tsx'
+import { useEffect, useState } from 'react'
+import axios from 'axios';
 
 const Home = () => {
+    interface post {
+        postID: number, 
+        title: string,
+        postType: string,
+        body: string,
+        date: Date,
+        communityID: number,
+        userID: number,
+        flair: [string]
+    }
+
+    const [postData, setPostData] = useState<post[]>();
+
+    useEffect(() => {
+        const fetchPosts = async () => {
+            axios.get("http://localhost:3000/home")
+            .then((response) => {
+                setPostData(response.data)
+            })
+        }
+        fetchPosts();
+    }, [])
+
+    // TODO: Add handling for post types
+    // TODO: Upload new posts with not shit data (I love toes?? WE CANNOT SHOW THAT IN OUR PRESENTATION)
+    // TODO: Figure out likes and dislikes
+
     return (
         <>
             <div className='bg-slate-500 h-[150px] flex align-center items-center flex-col'>
@@ -13,18 +42,9 @@ const Home = () => {
             {/* where the posts are gonna go */}
             <div className='w-full h-max bg-slate-300'>
                 <li className='list-none ml-[10%] py-5'>
-                <Post title={'poop'} likes={99} dislikes={10} userID={'123'} type={'image'} content={'hey I go to CPP'} postID={'21'} datePosted={new Date()} tags={['tags']}/>
-                <Comment/>
-                <Post title={'poop'} likes={99} dislikes={10} userID={'123'} type={'image'} content={'hey I go to CPP'} postID={'21'} datePosted={new Date()} tags={['tags']}/>
-                <Post title={'poop'} likes={99} dislikes={10} userID={'123'} type={'image'} content={'hey I go to CPP'} postID={'21'} datePosted={new Date()} tags={['tags']}/>
-                <Post title={'poop'} likes={99} dislikes={10} userID={'123'} type={'image'} content={'hey I go to CPP'} postID={'21'} datePosted={new Date()} tags={['tags']}/>
-
-                <Post title={'poop'} likes={99} dislikes={10} userID={'123'} type={'image'} content={'hey I go to CPP'} postID={'21'} datePosted={new Date()} tags={['tags']}/>
-                <Post title={'poop'} likes={99} dislikes={10} userID={'123'} type={'image'} content={'hey I go to CPP'} postID={'21'} datePosted={new Date()} tags={['tags']}/>
-                <Post title={'poop'} likes={99} dislikes={10} userID={'123'} type={'image'} content={'hey I go to CPP'} postID={'21'} datePosted={new Date()} tags={['tags']}/>
-                <Post title={'poop'} likes={99} dislikes={10} userID={'123'} type={'image'} content={'hey I go to CPP'} postID={'21'} datePosted={new Date()} tags={['tags']}/>
-
-
+                {postData && postData.map((post, idx) => {
+                    return <Post key={`${post.postID} -- ${idx}`} title={post.title} likes={99} dislikes={10} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} />
+                } )} 
                 </li>
 
 

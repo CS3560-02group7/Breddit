@@ -9,6 +9,8 @@ import { Account, Comment, Post, UserCommunityRole, Community } from "./db/db_ty
 
 
 const app = express();
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 app.use(jsonParser)
 const port = 3000;
 
@@ -350,6 +352,64 @@ app.delete('/user', (req, res) => {
 
 //////////////////////////////////////////////////////////////////////////////////////USERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+// retrieve ten most recent posts
+app.get("/home", async (req, res) => {
+  // TODO: UPDate this and add likes and dislikes
+  interface postReturnObject  {
+    title: String,
+    type: String,
+    like: Number,
+    dislike: Number,
+    dayPosted: Date,
+    content: String,
+    tags: [String]
+  }
+
+  try {
+    const [results, fields] = await pool.promise().query(`SELECT * FROM post ORDER BY date ASC LIMIT 10 `)
+    if (results.length === 0) {
+      return res.sendStatus(404);
+    }
+    console.log(results)
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+
+
+})
+
+// retrieve all posts in a given community
+app.get("/posts_in_community", async (req, res) => {
+  // TODO: Update this and add likes and dislikes
+  
+  const {communityID} = req.query;
+  interface postReturnObject  {
+    title: String,
+    type: String,
+    like: Number,
+    dislike: Number,
+    dayPosted: Date,
+    content: String,
+    tags: [String]
+  }
+
+  try {
+    const [results, fields] = await pool.promise().query(`SELECT * FROM post WHERE communityID = ?`, [communityID])
+    if (results.length === 0) {
+      return res.sendStatus(404);
+    }
+    console.log(results)
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+})
+
+
+
 //Creates A Post
 app.post('/post', async (req, res) => {
 
@@ -367,7 +427,8 @@ app.post('/post', async (req, res) => {
         title: title,
         postType: postType,
         body: body,
-        flair: flair
+        flair: flair,
+        date: new Date
     };
 
     await pool.promise().query('INSERT INTO post SET ?', newPost);
