@@ -47,9 +47,9 @@ const SignUp = () => {
     }
 
     return (
-        <div className="bg-amber-500">
+        <div className="bg-offwhite">
             <div className='flex flex-col items-center justify-center h-screen'>
-                <div className='w-full max-w-md bg-[#222] rounded-xl shadow-md py-8 px-8'>
+                <div className='w-full max-w-md bg-slate-gray rounded-xl shadow-md py-8 px-8'>
                     <h2 className='text-[28px] font-bold text-white mb-6 text-center'>
                         Sign Up
                     </h2>
@@ -59,7 +59,7 @@ const SignUp = () => {
                         <input name="emailDuplicate" onChange={handleChange}placeholder='Confirm Email Address' className='bg-gray-700 text-white border-0 rounded-md p-2 mb-4 focus:bg-gray-600 focus:outline-none transition ease-in-out duration-150 placeholder-gray-300' type="email" />
                         <input name="password" onChange={handleChange} placeholder='Password' className='bg-gray-700 text-white border-0 rounded-md p-2 mb-4 focus:bg-gray-600 focus:outline-none transition ease-in-out duration-150 placeholder-gray-300' type="password" />
                         <input name="passwordDuplicate" onChange={handleChange} placeholder='Confirm Password' className='bg-gray-700 text-white border-0 rounded-md p-2 mb-4 focus:bg-gray-600 focus:outline-none transition ease-in-out duration-150 placeholder-gray-300' type="password" />
-                        <button onClick={handleOnSubmit} className="bg-gradient-to-r from-amber-500 to-amber-800 text-white font-medium py-2 px-4 rounded-md hover:bg-amber-500 hover:to-amber-700 ease-in duration-200" type="submit">
+                        <button onClick={handleOnSubmit} className="bg-gradient-to-r bg-amber-500 text-white font-medium py-2 px-4 rounded-md hover:bg-amber-400 ease-in duration-200" type="submit">
                             Submit
                         </button>
                         <p className="text-white mt-4 text-center">
