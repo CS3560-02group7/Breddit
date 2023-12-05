@@ -44,9 +44,9 @@ const Comment = () => {
       <label className="font-semibold text-gray-700">Enter Comment:</label>
       <textarea placeholder="Type your comment here.." className="w-full mt-2 rounded-md p-2 border
           border-gray-300"></textarea>
-      <button type="submit" className="text-white mt-2 px-6 py-3 bg-blue-500 rounded-md">Post
+      <button type="submit" className="text-white mt-2 px-6 py-3 bg-blue-500 hover:bg-blue-700 rounded-md">Post
           Comment</button>
-      <button className="bg-red-800 text-white h-12 rounded-md shadow-md pr-6 pl-6 text-center
+      <button className="bg-red-500 hover:bg-red-700 text-white h-12 rounded-md shadow-md pr-6 pl-6 text-center
           ml-2">Cancel</button>
     </div>
   </div>

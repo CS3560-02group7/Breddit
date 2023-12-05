@@ -23,7 +23,7 @@ const Post = (props: postProps) => {
     // const reputation = likes - dislikes;
     const userName = 'lolzers' 
     return (
-        <div className="bg-slate-400 w-[300px] h-fit p-5 m-3 rounded border-solid border-1 border-slate-900">
+        <div className="bg-offwhite w-[300px] h-fit p-5 m-3 rounded border-solid border-2 border-slate-gray">
             <div className='flex align-middle items-center'>
                 <div className='text-2xl pb-3'>{props.title}</div>
             </div>
