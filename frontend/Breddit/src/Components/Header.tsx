@@ -12,9 +12,9 @@ export interface headerProps {
 const Header = (props: headerProps) => {
     return (
         <>
-            <div className="flex flex-row w-screen bg-zinc-800 text-white border-solid border-white border-b-2">
+            <div className="flex flex-row w-screen bg-slate border-solid border-black border-b-2">
                 <div className="flex flex-row w-1/2 justify-start pl-6">
-                    <div className="flex rounded-full w-5 h-5 pt-1px bg-zinc-200">
+                    <div className="flex w-5 h-5 pt-1px">
                         <a href="../Home">
                             <img className="object-cover" src={props.logoSource} alt="Breddit Logo" />
                         </a>
