@@ -219,6 +219,26 @@ app.delete('/unsubscribeToCommunity', async (req, res) => {
   }
 });
 
+//Check a user's role in community
+app.get('/checkRole', async (req, res) => {
+
+  const userID = req.query.userID
+  const communityID = req.query.communityID
+
+  try {
+    const [results, fields] = await pool.promise().query('SELECT * FROM userCommunityRole WHERE userID = ? AND communityID = ?', [userID, communityID]);
+
+    if (results.length >= 1) {
+      return res.send(results[0].role); // Role already exists
+    }
+    return res.send("None")
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+
+});
+
 //Changes the profile picture of the user once profile has already been created
 app.put('/change_profile_pic', async (req, res) => {
   if (!req.body || Object.keys(req.body).length === 0) {

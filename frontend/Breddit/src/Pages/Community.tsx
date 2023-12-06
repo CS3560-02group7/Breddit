@@ -16,10 +16,6 @@ const Community = () => {
     const [joinText, setJoinButton] = useState('Join')
 
     // TODO: begin user join community flow
-    const joined = () => {
-        // Toggle between 'join' and 'joined'
-        setJoinButton((prevText) => (prevText === 'Join' ? 'Joined' : 'Join'));
-    };
 
 
     interface post {
@@ -44,11 +40,37 @@ const Community = () => {
     const [postData, setPostData] = useState<post[]>();
     const [communityID, setCommunityID] = useState<number>();
 
+    const joined = () => {
+        // Toggle between 'join' and 'joined
+        const userID = localStorage.getItem("userID");
+        axios.get('http://localhost:3000/checkRole?userID='+userID+'&communityID='+communityID)
+        .then((response) => {
+            if (response.data =="None"){
+                axios.post("http://localhost:3000/subscribeToCommunity",{userID: userID, communityID: communityID})
+                .then((response) => {
+                    setJoinButton("Joined")
+                })
+            }
+            else if (response.data =="member"){
+                axios.delete("http://localhost:3000/unsubscribeToCommunity",{ data: {userID: userID, communityID: communityID} })
+                .then((response) => {
+                    setJoinButton("join")
+                })
+            }
+            else if (response.data="owner"){
+                axios.delete("http://localhost:3000/deleteCommunity",{ data: {communityID: communityID} })
+                .then((response) => {
+                    navigate("/");
+                })
+            }
+                })
+        .catch((err) => {console.error(err)})
+    };
+
     useEffect(() => {
         axios.get(`http://localhost:3000/communityID?name=${title}`)
         .then((response) => {
             setCommunityID(response.data[0].communityID)
-            console.log(response.data[0].communityID)
         })
         .catch((err) => {console.error(err)})
     }, [title])
@@ -56,7 +78,6 @@ const Community = () => {
     useEffect(() => {
         const fetchPosts = async () => {
             const url: string = `http://localhost:3000/posts_in_community?communityID=${communityID}`
-            console.log(url)
             axios.get(url)
             .then((response) => {
                 setPostData(response.data)
@@ -66,6 +87,23 @@ const Community = () => {
         fetchPosts();
     }, [communityID])
 
+    useEffect(() => {
+        const userID = localStorage.getItem("userID");
+        axios.get('http://localhost:3000/checkRole?userID='+userID+'&communityID='+communityID)
+        .then((response) => {
+            console.log("Role:")
+            console.log(response.data)
+            if (response.data == "None"){
+                setJoinButton("Join")
+            }
+            else if (response.data == "member"){
+                setJoinButton("Joined")
+            }
+            else if (response.data == "owner"){
+                setJoinButton("Delete Community")
+            }
+        });
+    }, [])
 
     return (
         <>
@@ -80,7 +118,6 @@ const Community = () => {
             <div className='w-full h-max bg-slate-300'>
             <li className='list-none ml-[10%] py-5'>
                 {postData && postData.map((post, idx) => {
-                    console.log(post.date, typeof post.date)
                     return <Post key={`${post.postID} -- ${idx}`} title={post.title} likes={post.reputation} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} username={post.username}/>
                 } )} 
                 </li>
