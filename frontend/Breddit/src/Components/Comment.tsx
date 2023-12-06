@@ -24,8 +24,8 @@ const Comment = () => {
         <div className="mx-auto items-start justify-start flex-col container flex bg-offwhite rounded p-4">
     <div className="w-full pt-0 p-4">
       <p className="font-extrabold text-3xl mb-3">Comments</p>
-      <div className="items-stretch w-full pt-4 flex-row flex border-t border-gray-200">
-        <div className="items-center justify-center flex-col flex">
+      <div className="items-stretch w-full pt-4 flex-row flex border-solid border-2 border-slate-400 rounded p-4">
+        <div className="items-center justify-center flex-col flex ">
           <button type="submit" className="hover:bg-blue-700 rounded text-white bg-blue-500 font-bold py-2
               px-8 w-full">Upvote</button>
           <p className="text-center text-sm font-semibold m-4">0</p>
