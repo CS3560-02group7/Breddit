@@ -44,7 +44,7 @@ function LoginForm(){
         //body to make image and content flex
         <div className="h-screen flex">
         <img src="https://tastesbetterfromscratch.com/wp-content/uploads/2020/03/Bread-Recipe-5-2.jpg"/>
-        <div className="h-screen flex items-center justify-center w-full bg-amber-700">
+        <div className="h-screen flex items-center justify-center w-full bg-slate-400">
         <div className="flex items-center justify-center flex-col h-fit w-fit p-10 bg-white rounded">
             <h1 className="text-3xl text-gray-900 dark:text-black mb-8"> Welcome to Breddit</h1>
             <form  action="" method="get" className="login-form" style={{
@@ -76,7 +76,7 @@ function LoginForm(){
                 <p>New to Breddit? <a href="signup" className="font-semibold text-blue-900 underline dark:text-blue decoration-blue-500 mb-1" >Sign up for an account.</a></p>
 
                 <div className="login-form w-full">
-                    <button type="button" onClick={handleOnSubmit} className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded w-full mt-4">Submit</button>
+                    <button type="button" onClick={handleOnSubmit} className="bg-slate-500 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded w-full mt-4">Submit</button>
                 </div>
             </form>
             </div>

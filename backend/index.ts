@@ -396,7 +396,7 @@ app.get("/posts_in_community", async (req, res) => {
   }
 
   try {
-    const [results, fields] = await pool.promise().query(`SELECT * FROM post WHERE communityID = ?`, [communityID])
+    const [results, fields] = await pool.promise().query(`SELECT * FROM post where communityID = ?`, [communityID])
     if (results.length === 0) {
       return res.sendStatus(404);
     }
