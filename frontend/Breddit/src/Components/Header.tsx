@@ -108,6 +108,9 @@ const Header = (props: headerProps) => {
                 <div className="flex flex-row w-1/2 justify-end pr-6">
                     <div>
                         {props.userID}
+                        <a className="text-white-500 hover:underline mt-4 px-4" href="/">
+                                Logout
+                            </a>
                     </div>
                 </div>
 

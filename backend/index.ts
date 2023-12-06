@@ -124,7 +124,7 @@ app.get('/userCommunities', async (req, res) => {
   SELECT community.communityID, community.name, community.description, community.picture
   FROM userCommunityRole
   JOIN community on community.communityID = userCommunityRole.communityID
-  WHERE userCommunityRole.userID = ?
+  WHERE userCommunityRole.userID = ? AND role != "banned"
   `
   try {
     const [results, fields] = await pool.promise().query(sqlStatement, [userID])
@@ -186,13 +186,35 @@ app.post('/subscribeToCommunity', async (req, res) => {
   }
 
   try {
-    const [results, fields] =  await pool.promise().query('INSERT INTO userCommunityRole SET ?', [subToComm])
+    const [results, fields] = await pool.promise().query('SELECT * FROM userCommunityRole WHERE userID = ? AND communityID = ?', [userID, communityID]);
+
+    if (results.length >= 1) {
+      return res.sendStatus(200); // Role already exists
+    }
+    await pool.promise().query('INSERT INTO userCommunityRole SET ?', [subToComm])
     return res.sendStatus(201)
   } catch (error) {
     console.error(error)
     return res.sendStatus(500)
   }
 
+});
+
+//Removes a community from the list of communities users are in
+app.delete('/unsubscribeToCommunity', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, communityID} = req.body;
+
+  try {
+    const [results, fields] =  await pool.promise().query('DELETE FROM userCommunityRole WHERE userID = ? AND communityID = ? AND role != "banned"', [userID, communityID])
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //Changes the profile picture of the user once profile has already been created
@@ -336,41 +358,140 @@ app.get('/allCommunities', async (req, res) => {
 });
 
 //Allows moderators to edit description of community
-app.put('/editDescription', (req, res) => {
-  const {userID, communityID, description} = req.query; 
+app.put('/editDescription', async(req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
 
-  // res -> status code
+  const {communityID, description} = req.body; 
   
+  try {
+    const [results, fields] =  await pool.promise().query('UPDATE community SET description = ? WHERE communityID = ?', [description, communityID])
+    if (results.length === 0) {
+      return res.sendStatus(404);
+    }
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //Changes the profile picture of the community
-app.put('/changeCommunityPic', (req, res) => {
-  // do this things with that
-  const {userID, communityID, photoURL} = req.body
-  // res -> status code
+app.put('/changeCommunityPic', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {communityID, photoURL} = req.body; 
+  
+  try {
+    const [results, fields] =  await pool.promise().query('UPDATE community SET picture = ? WHERE communityID = ?', [photoURL, communityID])
+    if (results.length === 0) {
+      return res.sendStatus(404);
+    }
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //Gives user moderator
-app.put('/makeMod', (req, res) => {
-  // do this things with that
-  const {communityID, userID} = req.body
-  // res -> status code
+app.post('/makeMod', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, communityID} = req.body;
+  
+  const subToComm:UserCommunityRole = {
+    role: "moderator",
+    userID: userID,
+    communityID: communityID,
+  }
+  
+  try {
+    const [results, fields] = await pool.promise().query('SELECT * FROM userCommunityRole WHERE userID = ? AND communityID = ?', [userID, communityID]);
+
+    if (results.length >= 1) {
+      await pool.promise().query('UPDATE userCommunityRole SET role = "moderator" WHERE userID = ? AND communityID = ?', [userID, communityID])
+      return res.sendStatus(200); // Role updated
+    }
+
+    await pool.promise().query('INSERT INTO userCommunityRole SET ?', [subToComm])
+    return res.sendStatus(201)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //Bans User From Community
-app.delete('/banUser', (req, res) => {
-  // do this things with that
-  const {communityID, userID} = req.body
-  // res -> status code
+app.post('/banUser', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, communityID} = req.body;
+  
+  const subToComm:UserCommunityRole = {
+    role: "banned",
+    userID: userID,
+    communityID: communityID,
+  }
+  
+  try {
+    const [results, fields] = await pool.promise().query('SELECT * FROM userCommunityRole WHERE userID = ? AND communityID = ?', [userID, communityID]);
+
+    if (results.length >= 1) {
+      await pool.promise().query('UPDATE userCommunityRole SET role = "banned" WHERE userID = ? AND communityID = ?', [userID, communityID])
+      return res.sendStatus(200); // Role updated
+    }
+
+    await pool.promise().query('INSERT INTO userCommunityRole SET ?', [subToComm])
+    return res.sendStatus(201)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//Unbans User From Community
+app.delete('/unbanUser', async (req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {userID, communityID} = req.body;
+
+  try {
+    const [results, fields] =  await pool.promise().query('DELETE FROM userCommunityRole WHERE userID = ? AND communityID = ? AND role = "banned"', [userID, communityID])
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
 //Deletes Community
-app.delete('/user', (req, res) => {
-  const {userID, communityID} = req.body
-  // res -> status code
+app.delete('/deleteCommunity', async(req, res) => {
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
+  }
+
+  const {communityID} = req.body
+
+  try {
+    const [results, fields] =  await pool.promise().query('DELETE FROM community WHERE communityID = ?', [communityID])
+    return res.sendStatus(200)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
 });
 
-//////////////////////////////////////////////////////////////////////////////////////USERS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////POSTS\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 // retrieve ten most recent posts
 app.get("/home", async (req, res) => {
@@ -386,7 +507,7 @@ app.get("/home", async (req, res) => {
   }
 
   try {
-    const [results, fields] = await pool.promise().query(`SELECT * FROM postWithReputation ORDER BY date ASC LIMIT 10 `)
+    const [results, fields] = await pool.promise().query(`SELECT * FROM post ORDER BY date ASC LIMIT 10 `)
     if (results.length === 0) {
       return res.sendStatus(404);
     }
