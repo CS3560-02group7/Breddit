@@ -98,49 +98,69 @@ app.post('/log_in', async (req, res) => {
   }
 });
 
-// add one to user reputation
-app.put('/decrement_user_rep', async (req, res) => {
-  if (!req.body || Object.keys(req.body).length === 0) {
-    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
-  }
-  const {userID} = req.body
-
-  try {
-    const [results, fields] = await pool.promise().query(`UPDATE account SET reputation=reputation - 1 WHERE userID="?"`, [userID])
-    return res.json(results)
-  } catch (err) {
-    console.error(err)
-    return res.sendStatus(500)
-  }
-})
-
-
-// subtract one to user reputation
-app.put('/increment_user_rep', async (req, res) => {
-  if (!req.body || Object.keys(req.body).length === 0) {
-    return res.status(400).send('Bad Request: Missing or incorrect Content-Type');
-  }
-  const {userID} = req.body
-
-  try {
-    const [results, fields] = await pool.promise().query(`UPDATE account SET reputation = reputation + 1 WHERE userID=?`, [userID])
-    return res.json(results)
-  } catch (err) {
-    console.error(err)
-    return res.sendStatus(500)
-  }
-})
-
-// Returns user data (including communities they're subbed to)
+// Returns user data 
 app.get('/user', async (req, res) => {
   const {userID} = req.query; 
   
   const sqlStatement = `
-  SELECT account.emailAddress, account.username, account.profilePicture, account.reputation, community.name as communityName  
+  SELECT accountWithReputation.emailAddress, accountWithReputation.username, accountWithReputation.profilePicture, accountWithReputation.reputation
+  FROM accountWithReputation
+  WHERE accountWithReputation.userID = ?
+  `
+  try {
+    const [results, fields] = await pool.promise().query(sqlStatement, [userID])
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//Returns a JSON of all communities the user is subscribed to
+app.get('/userCommunities', async (req, res) => {
+  const {userID} = req.query; 
+  
+  const sqlStatement = `
+  SELECT community.communityID, community.name, community.description, community.picture
   FROM userCommunityRole
-  JOIN account on account.userID = userCommunityRole.userID
   JOIN community on community.communityID = userCommunityRole.communityID
   WHERE userCommunityRole.userID = ?
+  `
+  try {
+    const [results, fields] = await pool.promise().query(sqlStatement, [userID])
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//Returns a JSON of all posts the user created
+app.get('/userPosts', async (req, res) => {
+  const {userID} = req.query; 
+  
+  const sqlStatement = `
+  SELECT *
+  FROM postWithReputation
+  WHERE postWithReputation.userID = ?
+  `
+  try {
+    const [results, fields] = await pool.promise().query(sqlStatement, [userID])
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
+//Returns a JSON of all comments the user created
+app.get('/userComments', async (req, res) => {
+  const {userID} = req.query; 
+  
+  const sqlStatement = `
+  SELECT *
+  FROM commentWithReputation
+  WHERE commentWithReputation.userID = ?
   `
   try {
     const [results, fields] = await pool.promise().query(sqlStatement, [userID])
@@ -366,7 +386,7 @@ app.get("/home", async (req, res) => {
   }
 
   try {
-    const [results, fields] = await pool.promise().query(`SELECT * FROM post ORDER BY date ASC LIMIT 10 `)
+    const [results, fields] = await pool.promise().query(`SELECT * FROM postWithReputation ORDER BY date ASC LIMIT 10 `)
     if (results.length === 0) {
       return res.sendStatus(404);
     }
@@ -396,7 +416,7 @@ app.get("/posts_in_community", async (req, res) => {
   }
 
   try {
-    const [results, fields] = await pool.promise().query(`SELECT * FROM post where communityID = ?`, [communityID])
+    const [results, fields] = await pool.promise().query(`SELECT * FROM postWithReputation WHERE communityID = ?`, [communityID])
     if (results.length === 0) {
       return res.sendStatus(404);
     }
