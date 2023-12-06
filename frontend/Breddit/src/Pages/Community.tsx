@@ -31,7 +31,8 @@ const Community = () => {
         communityID: number,
         userID: number,
         flair: [string],
-        reputation: number
+        reputation: number,
+        username: string
     }
 
     let navigate = useNavigate();
@@ -80,7 +81,7 @@ const Community = () => {
             <li className='list-none ml-[10%] py-5'>
                 {postData && postData.map((post, idx) => {
                     console.log(post.date, typeof post.date)
-                    return <Post key={`${post.postID} -- ${idx}`} title={post.title} likes={post.reputation} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} />
+                    return <Post key={`${post.postID} -- ${idx}`} title={post.title} likes={post.reputation} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} username={post.username}/>
                 } )} 
                 </li>
 
