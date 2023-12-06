@@ -73,6 +73,7 @@ app.post('/log_in', async (req, res) => {
 
   const password = req.body.password;
   const emailAddress = req.body.email
+  console.log("Email Address" + emailAddress)
   try {
     // Execute the query and wait for the result
     const [results, fields] = await pool.promise().query(`SELECT * FROM account WHERE emailAddress = ?`, [emailAddress]);

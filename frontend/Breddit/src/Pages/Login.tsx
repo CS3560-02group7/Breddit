@@ -14,24 +14,18 @@ function LoginForm(){
         e.preventDefault();
 
         // Using a state that just flips on and off and triggers the useEffect hook to fire
-        setLogIn(!logIn);
+        console.log(formData)
+            axios.post("http://localhost:3000/log_in",formData)
+            .then(function (response) {
+                if (response.data){
+                    localStorage.setItem("userID",response.data.userID);
+                    navigate("home");
+                }
+            })
+            .catch(function (error) {
+                alert(error);
+            });
     }
-
-    useEffect(() => {
-        // Update the document title using the browser API
-        console.log(formData);
-        axios.post("http://localhost:3000/log_in",formData)
-        .then(function (response) {
-            if (response.data){
-                console.log(response.data);
-                localStorage.setItem("userID",response.data.userID);
-                navigate("home");
-            }
-        })
-        .catch(function (error) {
-            alert(error);
-        });
-      },[logIn]);
 
     function handleChange(e: { target: { name: any; value: any; }; }) {
         const { name, value } = e.target;
