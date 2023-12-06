@@ -51,6 +51,7 @@ const Header = (props: headerProps) => {
 
     function onClickLogout(){
         localStorage.removeItem("userID");
+        localStorage.removeItem("username");
         nav("/")
     }
     

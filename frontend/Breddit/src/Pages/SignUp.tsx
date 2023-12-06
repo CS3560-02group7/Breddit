@@ -35,7 +35,7 @@ const SignUp = () => {
             axios.post("http://localhost:3000/sign_up",account)
             .then(function (response) {
                 if (response.data){
-                    console.log(response.data)
+                    localStorage.setItem("userID",response.data);
                     alert("Account Created!")
                     navigate('../home');
                 }

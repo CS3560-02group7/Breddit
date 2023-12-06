@@ -12,8 +12,8 @@ const UserProfile = () => {
     const [userPosts, setUserPosts] = useState([])
     const [userCommunity, setUserCommunity] = useState([])
     const [userComments, setUserComments] = useState([])
+    const userID = localStorage.getItem("userID");
     useEffect(() => {
-        const userID = localStorage.getItem("userID");
         axios.get("http://localhost:3000/user?userID=" + userID)
         .then((response) => {
             setUserData(response.data[0])
@@ -28,7 +28,7 @@ const UserProfile = () => {
         }).catch(function (error) {
             alert(error);
         });
-    },[]);
+    },[userID]);
 
     function goToEditProfile(){
         console.log("Here")
@@ -36,8 +36,8 @@ const UserProfile = () => {
         nav("../editprofile/:" + userID)
     }
 
-    return (
-        <div>
+    if (userData){
+        return(<div>
             <div className="canvas-paper">
                 <div className="h-screen bg-slate-300">
             <div>
@@ -91,8 +91,13 @@ const UserProfile = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-        );
+            </div>)
+        
+    }
+    else{
+        return(<></>)
+    }
+        
     }; 
 
 export default UserProfile;
