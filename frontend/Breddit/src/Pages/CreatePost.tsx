@@ -109,7 +109,8 @@ const CreatePost = () => {
               const base64 = reader.result as string;
                 setFormData({
                     ...formData,
-                    body: base64
+                    body: base64,
+                    postType: "image"
                 });
               setBase64String(base64);
             };
@@ -131,10 +132,6 @@ const CreatePost = () => {
 
 
       const imagePost = () => {
-        setFormData({
-            ...formData,
-            postType: "image"
-        });
         setPostBody(
             <div className='border-dashed w-full border-2 border-slate-400 rounded flex justify-center items-center h-48'>
                 <ImageUploadComponent/>

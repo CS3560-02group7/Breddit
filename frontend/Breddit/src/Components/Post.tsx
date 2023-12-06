@@ -26,6 +26,7 @@ const Post = (props: postProps) => {
     const today = d.toLocaleDateString()
 
     const nav = useNavigate();
+    console.log(props)
 
 
     function upvotePost(postID: number) {
@@ -36,6 +37,7 @@ const Post = (props: postProps) => {
         axios.post("http://localhost:3000/upvotePost", payload) 
         .then((response) => {
             console.log(response.data)
+            window.location.reload(false);
         })
         .catch((err) => {
             console.error(err)
@@ -50,6 +52,7 @@ const Post = (props: postProps) => {
         axios.post("http://localhost:3000/downvotePost", payload) 
         .then((response) => {
             console.log(response.data)
+            window.location.reload(false);
         })
         .catch((err) => {
             console.error(err)
