@@ -52,8 +52,9 @@ app.post('/sign_up', async (req, res) => {
       };
 
       // Insert user into db (with hashed password)
-      await pool.promise().query('INSERT INTO account SET ?', newUser);
+      const [results1, fields1] = await pool.promise().query('INSERT INTO account SET ?', [newUser]);
 
+      return res.json(results1.insertId)
       return res.sendStatus(201); // Successfully created the user
   } catch (error) {
       console.error('An error occurred: ', error);
@@ -508,7 +509,7 @@ app.get("/home", async (req, res) => {
   }
 
   try {
-    const [results, fields] = await pool.promise().query(`SELECT * FROM post ORDER BY date ASC LIMIT 10 `)
+    const [results, fields] = await pool.promise().query(`SELECT * FROM postWithReputation ORDER BY date ASC LIMIT 10 `)
     if (results.length === 0) {
       return res.sendStatus(404);
     }

@@ -30,7 +30,8 @@ const Community = () => {
         date: Date,
         communityID: number,
         userID: number,
-        flair: [string]
+        flair: [string],
+        reputation: number
     }
 
     let navigate = useNavigate();
@@ -49,7 +50,7 @@ const Community = () => {
             console.log(response.data[0].communityID)
         })
         .catch((err) => {console.error(err)})
-    }, [])
+    }, [title])
 
     useEffect(() => {
         const fetchPosts = async () => {
@@ -64,11 +65,12 @@ const Community = () => {
         fetchPosts();
     }, [communityID])
 
+
     return (
         <>
             <div className='bg-slate-500 h-[150px] flex align-center items-center text-offwhite'>
                 {/* image goes right here */}
-                <div className='ml-[10%] text-3xl'>{title}</div>
+                <div className='ml-[10%] text-3xl'>{decodeURIComponent(title)}</div>
                 <button onClick={joined} className='rounded-full border-solid border-2 border-white ml-5 w-[90px] py-2 text-center' >{joinText}</button>
                 <button onClick={routeChange} className='rounded-full border-solid border-2 border-white ml-5 px-5 py-2 text-center' >Create Post</button>
             </div >
@@ -78,7 +80,7 @@ const Community = () => {
             <li className='list-none ml-[10%] py-5'>
                 {postData && postData.map((post, idx) => {
                     console.log(post.date, typeof post.date)
-                    return <Post key={`${post.postID} -- ${idx}`} title={post.title} likes={99} dislikes={10} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} />
+                    return <Post key={`${post.postID} -- ${idx}`} title={post.title} likes={post.reputation} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} />
                 } )} 
                 </li>
 
