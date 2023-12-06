@@ -11,7 +11,6 @@ const UserProfile = () => {
     const [userData, setUserData] = useState([])
     const [userPosts, setUserPosts] = useState([])
     const [userCommunity, setUserCommunity] = useState([])
-    const [userComments, setUserComments] = useState([])
     const userID = localStorage.getItem("userID");
     useEffect(() => {
         axios.get("http://localhost:3000/user?userID=" + userID)
@@ -22,18 +21,24 @@ const UserProfile = () => {
         });
         axios.get("http://localhost:3000/userPosts?userID=" + userID)
         .then((response) => {
-            console.log(response)
-            setUserData(response.data[0])
-            console.log(userData)
+            setUserPosts(response.data)
+            console.log(userPosts)
         }).catch(function (error) {
             alert(error);
         });
-    },[userID]);
+    },[]);
 
     function goToEditProfile(){
-        console.log("Here")
         const userID = localStorage.getItem("userID");
         nav("../editprofile/:" + userID)
+    }
+
+    function goToCreateCommunity(){
+        nav("../create_community")
+    }
+
+    function goToCreatePost(){
+        nav("../create_post")
     }
 
     if (userData){
@@ -60,17 +65,15 @@ const UserProfile = () => {
                                     </p>
                                 </div>
                             </div>
-                                <button type="submit" className="hover:bg-amber-500 rounded text-white bg-amber-400 font-bold
-                                    py-2 px-4" onClick={goToEditProfile} >Edit Profile</button>
-                                    <div className="absolute right-0 top-5"></div>
                                 </div>
                             </div>
                             <div className="w-2/3 pl-5 grid grid-cols-1 gap-5">
                                 <section className="bg-offwhite shadow-md rounded p-5">
                                 <div className="justify-between items-center flex">
                                     <p className="text-xl font-bold text-gray-800">Posts</p>
+                                    <></>
                                     <button type="submit" className="hover:bg-green-700 rounded text-white bg-green-500
-                                        font-bold py-1 px-2">
+                                        font-bold py-1 px-2" onClick = {goToCreatePost}>
                                         <div className="fas fa-plus">+</div>
                                     </button>
                                     </div>
@@ -79,7 +82,7 @@ const UserProfile = () => {
                                 <div className="justify-between items-center flex">
                                     <p className="text-xl font-bold text-gray-800">Communities</p>
                                     <button className="hover:bg-green-700 rounded text-white bg-green-500
-                                        font-bold py-1 px-2">
+                                        font-bold py-1 px-2" onClick = {goToCreateCommunity}>
                                     <div className="fas fa-plus"> + </div>
                                     </button>
                                 </div>
