@@ -10,6 +10,7 @@ import axios from 'axios';
 const Community = () => {
     const location = useLocation();
     const { pathname } = location;
+    const userID = localStorage.getItem("userID");
 
     // This will ensure that if a user just enters here, we can still render everything as needed
     const title: string = pathname.substring(3);
@@ -88,7 +89,6 @@ const Community = () => {
     }, [communityID])
 
     useEffect(() => {
-        const userID = localStorage.getItem("userID");
         axios.get('http://localhost:3000/checkRole?userID='+userID+'&communityID='+communityID)
         .then((response) => {
             console.log("Role:")
@@ -103,7 +103,7 @@ const Community = () => {
                 setJoinButton("Delete Community")
             }
         });
-    }, [])
+    }, [userID])
 
     return (
         <>
