@@ -9,7 +9,7 @@ import Post from '../Components/Post.tsx'
 const UserProfile = () => {
 
     const nav = useNavigate()
-    const [userData, setUserData] = useState([])
+    const [userData, setUserData] = useState<userData>([])
     const [userPosts, setUserPosts] = useState([])
     const [postsDiv, setPostsDiv] = useState([])
     const [userCommunity, setUserCommunity] = useState([])
@@ -55,6 +55,13 @@ const UserProfile = () => {
         nav("../create_post")
     }
 
+    interface userData {
+      email: string,
+      username: string,
+      profilePicture: string,
+      reputation: number
+    }
+
     if (userData){
         return(<div className="bg-gray-100">
             <div className="canvas-paper ">
@@ -65,7 +72,7 @@ const UserProfile = () => {
                 </div>
                 <div className="mx-auto items-center flex-col bg-gray-700 h-full p-5 flex">
                   <div className="bg-white shadow-md w-1/3 h-auto flex-col rounded flex space-y-5 p-5 relative">
-                    <img src={userData.profilePicture} className="self-center w-20 h-20 rounded-full"/>
+                    <img src={userData.profilePicture} className="self-center w-20 h-20 rounded-full" alt="User's profile photo"/>
                     <div className="space-y-2">
                       <p className="text-2xl font-bold text-center text-gray-800">Username: {userData.username}</p>
                       <p className="text-center text-gray-500">Reputation: {userData.reputation}</p>

@@ -29,7 +29,8 @@ const Community = () => {
         userID: number,
         flair: [string],
         reputation: number,
-        username: string
+        username: string,
+        name: string
     }
 
     let navigate = useNavigate();
@@ -82,6 +83,7 @@ const Community = () => {
             const url: string = `http://localhost:3000/posts_in_community?communityID=${communityID}`
             axios.get(url)
             .then((response) => {
+                console.log("SHOWING POSTS", response.data)
                 setPostData(response.data)
             })
             .catch((err) => {
@@ -130,7 +132,7 @@ const Community = () => {
             <div className='w-full h-max bg-slate-300'>
             <li className='list-none ml-[10%] py-5'>
                 {postData && postData.map((post, idx) => {
-                    return <Post key={`${post.postID} -- ${idx}`} title={post.title} likes={post.reputation} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} username={post.username}/>
+                    return <Post key={`${post.postID} -- ${idx}`} title={post.title} likes={post.reputation} name={post.name} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} username={post.username}/>
                 } )} 
                 </li>
 

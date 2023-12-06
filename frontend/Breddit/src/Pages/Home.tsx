@@ -14,7 +14,8 @@ const Home = () => {
         userID: number,
         flair: [string],
         reputation: number,
-        username: string
+        username: string,
+        name: string
     }
 
     const [postData, setPostData] = useState<post[]>();
@@ -23,6 +24,7 @@ const Home = () => {
         const fetchPosts = async () => {
             axios.get("http://localhost:3000/home")
             .then((response) => {
+                console.log("FETCH HOME", response.data)
                 setPostData(response.data)
             })
         }
@@ -43,7 +45,7 @@ const Home = () => {
             <div className='w-full h-max bg-slate-300'>
                 <li className='list-none ml-[10%] py-5'>
                 {postData && postData.map((post, idx) => {
-                    return <Post key={`${post.postID} -- ${idx}`} title={post.title} likes={post.reputation} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} username={post.username}/>
+                    return <Post key={`${post.postID} -- ${idx}`} title={post.title} name={post.name} likes={post.reputation} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} username={post.username}/>
                 } )} 
                 </li>
 

@@ -22,7 +22,8 @@ const CommunityPost = () => {
         userID: number,
         flair: [string],
         reputation: number,
-        username: string
+        username: string,
+        name: string
     }
 
     interface comment {
@@ -200,7 +201,7 @@ const CommunityPost = () => {
     
     return (
         <div>
-            {postData && <Post className='ml-10' title={postData.title} username={postData.username} reputation={postData.reputation} userID={postData.userID} type={postData.postType} content={postData.body} postID={postData.postID} datePosted={postData.date} tags={postData.flair}/>}
+            {postData && <Post className='ml-10' title={postData.title} name={postData.name} username={postData.username} reputation={postData.reputation} userID={postData.userID} type={postData.postType} content={postData.body} postID={postData.postID} datePosted={postData.date} tags={postData.flair}/>}
             < WriteParentComment />
             <div className='bg-gray-500 flex h-full place-items-center flex-col content-center'>
                 <div className="mx-auto items-start justify-start flex-col container flex">

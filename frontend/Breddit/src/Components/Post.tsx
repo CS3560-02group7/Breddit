@@ -17,7 +17,8 @@ export interface postProps {
     postID: number,
     tags: [string],
     username: string
-    reputation: number
+    reputation: number,
+    name: string
 }
 
 
@@ -26,7 +27,6 @@ const Post = (props: postProps) => {
     const today = d.toLocaleDateString()
 
     const nav = useNavigate();
-    console.log(props)
 
 
     function upvotePost(postID: number) {
@@ -64,6 +64,7 @@ const Post = (props: postProps) => {
     return (
         <div className="bg-offwhite w-5/6 h-fit p-5 m-3 rounded border-solid border-2 border-slate-gray" >
             <div onClick={() => {nav(`/post/${props.postID}`)}}>
+                <p>Community: {props.name}</p>
             <div className='flex align-middle items-center'>
                 <div className='text-2xl pb-3'>{props.title}</div>
             </div>

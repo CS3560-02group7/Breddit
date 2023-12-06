@@ -526,7 +526,8 @@ app.get("/home", async (req, res) => {
     dislike: Number,
     dayPosted: Date,
     content: String,
-    tags: [String]
+    tags: [String],
+    name: String
   }
 
   const sqlStatement = `
@@ -546,8 +547,6 @@ app.get("/home", async (req, res) => {
     console.error(error)
     return res.sendStatus(500)
   }
-
-
 })
 
 // retrieve all posts in a given community
@@ -1040,44 +1039,6 @@ app.get('/', (req, res) => {
   // do this things with that
   res.send("We did it")
 });
-
-app.get('/home', (req, res) => {
-  // do this things with that
-  res.send("We did it")
-});
-
-app.post('/login', (req, res) => {
-  const data = req.body;
-  // do this things with that
-  res.send('Logged in!');
-});
-
-
-app.post('/signup', (req, res) => {
-  const data = req.body;
-  res.send('Signed up!');
-});
-
-app.get('/home', (req, res) => {
-  // this will determine the offset of how many posts to give the user
-  // we are NOT making it unique to each user, it's ok.
-  const ind = req.query["index"];
-  res.json({
-    0: ["25 post objects"]
-  })
-});
-
-// route to show the posts in a community based on some offset
-//Currently Not Working
-/*app.get('/comm', (req, res) => {
-  // this will determine the offset of how many posts to give the user
-  // we are NOT making it unique to each user, it's ok.
-  const community = req.params.community;
-  const ind = req.params.index;
-  res.json({
-    0: ["25 post objects"]
-  })
-});*/
 
 app.listen(port, () => {
   // tslint:disable-next-line:no-console

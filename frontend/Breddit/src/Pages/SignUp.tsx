@@ -51,7 +51,6 @@ const SignUp = () => {
     }
     const ImageUploadComponent: React.FC = () => {
         const [base64String, setBase64String] = useState<string>('');
-      
         const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
           const file = event.target.files ? event.target.files[0] : null;
           if (file) {
@@ -69,10 +68,9 @@ const SignUp = () => {
 
         };
       
+      
         return (
-          <div>
-            <input className="content-center" type="file" accept="image/*" onChange={handleFileChange} /> 
-          </div>
+            <input type="file" accept="image/*" onChange={handleFileChange} /> 
         );
       };
 
