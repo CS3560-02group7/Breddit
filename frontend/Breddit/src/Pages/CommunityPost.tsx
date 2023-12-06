@@ -96,8 +96,6 @@ const CommunityPost = () => {
                     border-gray-300" onChange={(e) => {setText(e.target.value)}}></textarea>
                 <button  className="hover:bg-blue-700 text-white mt-2 px-6 py-3 bg-blue-500
                     rounded-md" onClick={handlePostParentComment}>Post Comment</button>
-                <button type="submit" className="hover:bg-red-700 text-white bg-red-500 h-12 rounded-md shadow-md
-                    pr-6 pl-6 text-center ml-2">Cancel</button>
             </div>
         )
     }
