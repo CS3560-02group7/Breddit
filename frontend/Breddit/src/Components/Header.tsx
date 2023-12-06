@@ -4,7 +4,6 @@ import { Select } from 'antd';
 import axios from 'axios';
 import { useState, useEffect, SetStateAction, useContext } from 'react';
 import { Input } from 'antd';
-import { SiteContext } from './SiteContext';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -21,9 +20,7 @@ const Header = (props: headerProps) => {
     const [formData, setFormData] = useState<postForm>({ userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "post", body: "", flair: ""})
     interface communitySelection { value: string, label: string }
     const [communities, getCommunities] = useState<communitySelection[]>([]);
-    const { state: siteContext, dispatch: siteDispatch } = useContext(
-        SiteContext
-    );
+
     
     interface option {
         value: number,
@@ -46,6 +43,16 @@ const Header = (props: headerProps) => {
     const onSearch = (value: string) => {
         console.log('search:', value);
     };
+
+    function onClickProfile(){
+        const userID = localStorage.getItem("userID");
+        nav("profile/:" + userID);
+    }
+
+    function onClickLogout(){
+        localStorage.removeItem("userID");
+        nav("/")
+    }
     
 
     const filterOption = (input: string, option?: { label: string; value: string }) =>
@@ -105,12 +112,12 @@ const Header = (props: headerProps) => {
                     value={this}
                 />
                 </div>
-                <div className="flex flex-row w-1/2 justify-end pr-6">
-                    <div>
-                        {props.userID}
-                        <a className="text-white-500 hover:underline mt-4 px-4" href="/">
-                                Logout
-                            </a>
+                <div className="flex flex-row w-1/2 justify-end pr-6 ">
+                    <div onClick = {onClickProfile} className="text-white-500 hover:underline mt-2 px-4">
+                        Go To Profile
+                    </div>
+                    <div className="text-white-500 hover:underline mt-2 px-4" onClick = {onClickLogout}>
+                        Logout
                     </div>
                 </div>
 
