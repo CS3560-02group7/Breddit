@@ -52,7 +52,7 @@ const Header = (props: headerProps) => {
     function onClickLogout(){
         localStorage.removeItem("userID");
         localStorage.removeItem("username");
-        nav("/")
+        nav("/login")
     }
     
 
@@ -94,7 +94,7 @@ const Header = (props: headerProps) => {
             <div className="flex flex-row w-screen bg-slate border-solid border-black border-b-2 items-center">
                 <div className="flex flex-row w-1/2 justify-start pl-6 items-center">
                     <div className="flex w-5 h-5 pt-1px">
-                        <a href="../Home">
+                        <a href="../">
                             <img className="object-cover" src={props.logoSource} alt="Breddit Logo" />
                         </a>
                     </div>

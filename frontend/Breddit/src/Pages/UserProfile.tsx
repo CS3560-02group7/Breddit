@@ -10,6 +10,7 @@ const UserProfile = () => {
     const nav = useNavigate()
     const [userData, setUserData] = useState([])
     const [userPosts, setUserPosts] = useState([])
+    const [postsDiv, setPostsDiv] = useState([])
     const [userCommunity, setUserCommunity] = useState([])
     const userID = localStorage.getItem("userID");
     useEffect(() => {
@@ -55,7 +56,7 @@ const UserProfile = () => {
             <div className="mx-auto container p-5 flex">
                 <div className="w-1/3">
                     <div className="bg-offwhite shadow-md flex-col rounded p-5 flex space-y-5 relative">
-                        <img src="https://i.redd.it/1b08e2gy2xo81.jpg" className="self-center w-20 h-20 rounded-full"/>
+                        <img src={userData.profilePicture} className="self-center w-20 h-20 rounded-full"/>
                             <div className="space-y-2">
                             <p className="text-2xl font-bold text-gray-800">Username: {userData.username}</p>
                                 <div className="items-center justify-between flex">

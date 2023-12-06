@@ -12,7 +12,7 @@ const NotFound = () => {
                         Sorry, the page you requested does not exist.
                     </div>
                     <div className="flex items-center h-1/3">
-                        <Link to={"../../home"}>
+                        <Link to={"../../"}>
                             <button className="h-12 w-36 rounded-full bg-amber-500 hover:bg-amber-600 font-bold text-white">
                                 Return to Home
                             </button>

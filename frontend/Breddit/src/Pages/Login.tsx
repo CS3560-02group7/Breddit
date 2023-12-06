@@ -20,7 +20,7 @@ function LoginForm(){
                 if (response.data){
                     localStorage.setItem("userID",response.data.userID);
                     localStorage.setItem("username",response.data.username);
-                    navigate("home");
+                    navigate("/");
                 }
             })
             .catch(function (error) {
