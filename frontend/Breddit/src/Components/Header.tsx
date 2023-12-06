@@ -20,6 +20,9 @@ const Header = (props: headerProps) => {
     const [formData, setFormData] = useState<postForm>({ userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "post", body: "", flair: ""})
     interface communitySelection { value: string, label: string }
     const [communities, getCommunities] = useState<communitySelection[]>([]);
+    const { state: siteContext, dispatch: siteDispatch } = useContext(
+        SiteContext
+    );
     
     interface option {
         value: number,
@@ -42,6 +45,16 @@ const Header = (props: headerProps) => {
     const onSearch = (value: string) => {
         console.log('search:', value);
     };
+
+    function onClickProfile(){
+        const userID = localStorage.getItem("userID");
+        nav("profile/:" + userID);
+    }
+
+    function onClickLogout(){
+        localStorage.removeItem("userID");
+        nav("/")
+    }
     
 
     const filterOption = (input: string, option?: { label: string; value: string }) =>
@@ -103,6 +116,7 @@ const Header = (props: headerProps) => {
                 </div>
                 <div className="flex flex-row w-1/2 justify-end pr-6">
                     <div>
+                        {props.userID}
                         <a className="text-white-500 hover:underline mt-4 px-4" href="/">
                                 Logout
                             </a>

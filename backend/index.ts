@@ -73,6 +73,7 @@ app.post('/log_in', async (req, res) => {
 
   const password = req.body.password;
   const emailAddress = req.body.email
+  console.log("Email Address" + emailAddress)
   try {
     // Execute the query and wait for the result
     const [results, fields] = await pool.promise().query(`SELECT * FROM account WHERE emailAddress = ?`, [emailAddress]);
@@ -121,9 +122,9 @@ app.get('/userCommunities', async (req, res) => {
   const {userID} = req.query; 
   
   const sqlStatement = `
-  SELECT community.communityID, community.name, community.description, community.picture
+  SELECT communityWithSubscribers.communityID, communityWithSubscribers.name, communityWithSubscribers.description, communityWithSubscribers.picture, communityWithSubscribers.subscribers
   FROM userCommunityRole
-  JOIN community on community.communityID = userCommunityRole.communityID
+  JOIN communityWithSubscribers on communityWithSubscribers.communityID = userCommunityRole.communityID
   WHERE userCommunityRole.userID = ? AND role != "banned"
   `
   try {
@@ -314,7 +315,7 @@ app.get('/community', async (req, res) => {
   
   const sqlStatement = `
   SELECT *
-  FROM community
+  FROM communityWithSubscribers
   WHERE communityID = ` + communityID;
   try {
     const [results, fields] = await pool.promise().query(sqlStatement, [communityID])
@@ -347,7 +348,7 @@ app.get('/allCommunities', async (req, res) => {
   
   const sqlStatement = `
   SELECT *
-  FROM community;`
+  FROM communityWithSubscribers;`
   try {
     const [results, fields] = await pool.promise().query(sqlStatement)
     return res.json(results)
