@@ -64,11 +64,13 @@ const Community = () => {
         fetchPosts();
     }, [communityID])
 
+    const communityTitle = title.replace(/%20/g, ' ')
+
     return (
         <>
             <div className='bg-slate-500 h-[150px] flex align-center items-center text-offwhite'>
                 {/* image goes right here */}
-                <div className='ml-[10%] text-3xl'>{title}</div>
+                <div className='ml-[10%] text-3xl'>{communityTitle}</div>
                 <button onClick={joined} className='rounded-full border-solid border-2 border-white ml-5 w-[90px] py-2 text-center' >{joinText}</button>
                 <button onClick={routeChange} className='rounded-full border-solid border-2 border-white ml-5 px-5 py-2 text-center' >Create Post</button>
             </div >
