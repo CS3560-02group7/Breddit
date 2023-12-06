@@ -11,6 +11,7 @@ import UserProfile from "./Pages/UserProfile";
 import CreateCommunity from "./Pages/CreateCommunity";
 import Comment from "./Components/Comment";
 import CommunityPost from "./Pages/CommunityPost.tsx";
+import EditProfile from "./Components/EditProfile";
 
 /*
 Componenets 
@@ -56,6 +57,7 @@ function App() {
               <Route path="profile/:user" element={<UserProfile />} />
               <Route path="create_community" element={<CreateCommunity />} />
               <Route path="comment" element={<Comment />} />
+              <Route path="editprofile/:user" element={<EditProfile />} />
               <Route path="*" element={<NotFound />} />
 
             </Route>
