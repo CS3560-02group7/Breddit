@@ -40,6 +40,7 @@ const Community = () => {
 
     const [postData, setPostData] = useState<post[]>();
     const [communityID, setCommunityID] = useState<number>();
+    const [communityData, setCommunityData] = useState([])
 
     const joined = () => {
         // Toggle between 'join' and 'joined
@@ -106,6 +107,13 @@ const Community = () => {
         });
     }, [communityID])
 
+    useEffect(() => {
+        axios.get('http://localhost:3000/community?communityID='+communityID)
+        .then((response) => {
+            setCommunityData(response.data[0]);
+        });
+    }, [communityID])
+
     return (
         <>
             <div className='bg-slate-500 h-[150px] flex align-center items-center text-offwhite'>
@@ -114,6 +122,9 @@ const Community = () => {
                 <button onClick={joined} className='rounded-full border-solid border-2 border-white ml-5 w-[90px] py-2 text-center' >{joinText}</button>
                 <button onClick={routeChange} className='rounded-full border-solid border-2 border-white ml-5 px-5 py-2 text-center' >Create Post</button>
             </div >
+            <div className ='bg-slate-500 flex  items-center text-offwhite'>
+                <div className ="ml-[10%] mt-[-2%]">{communityData.description}</div>
+                </div>
 
             {/* where the posts are gonna go */}
             <div className='w-full h-max bg-slate-300'>

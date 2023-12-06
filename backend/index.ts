@@ -145,6 +145,7 @@ app.get('/userPosts', async (req, res) => {
   SELECT *
   FROM postWithReputation
   WHERE postWithReputation.userID = ?
+  ORDER BY date DESC LIMIT 10
   `
   try {
     const [results, fields] = await pool.promise().query(sqlStatement, [userID])
@@ -532,7 +533,7 @@ app.get("/home", async (req, res) => {
   SELECT postWithReputation.*, account.username
   FROM postWithReputation 
   JOIN account on account.userID = postWithReputation.userID
-  ORDER BY date ASC LIMIT 10 `
+  ORDER BY date DESC LIMIT 10 `
   try {
     const [results, fields] = await pool.promise().query(sqlStatement)
     if (results.length === 0) {
@@ -566,7 +567,8 @@ app.get("/posts_in_community", async (req, res) => {
   SELECT postWithReputation.*, account.username
   FROM postWithReputation 
   JOIN account on account.userID = postWithReputation.userID
-  WHERE communityID = ?`
+  WHERE communityID = ?
+  ORDER BY date DESC LIMIT 10`
 
   try {
     const [results, fields] = await pool.promise().query(sqlStatement, [communityID])
