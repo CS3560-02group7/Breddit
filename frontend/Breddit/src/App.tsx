@@ -11,8 +11,6 @@ import UserProfile from "./Pages/UserProfile";
 import CreateCommunity from "./Pages/CreateCommunity";
 import Comment from "./Components/Comment";
 
-// TODO: Find a CSS library, or just use vanilla up to yall :)
-
 /*
 Componenets 
 
@@ -37,27 +35,27 @@ function App() {
 
   return (
     <>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            
-            <Route index element={<Login />} />
-            <Route path="chat" element={<Chat />} />
-            <Route
-              path="/c/:community"
-              element={<Community />}
-            />
-            <Route path="home" element={<Home />} />
-            <Route path="signup" element={<SignUp />} />
-            <Route path="create_post" element={<CreatePost />} />
-            <Route path="profile/:user" element={<UserProfile />} />
-            <Route path="create_community" element={<CreateCommunity />} />
-            <Route path="comment" element={<Comment />} />
-            <Route path="*" element={<NotFound />} />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              
+              <Route index element={<Login />} />
+              <Route path="chat" element={<Chat />} />
+              <Route
+                path="/c/:community"
+                element={<Community />}
+              />
+              <Route path="home" element={<Home />} />
+              <Route path="signup" element={<SignUp />} />
+              <Route path="create_post" element={<CreatePost />} />
+              <Route path="profile/:user" element={<UserProfile />} />
+              <Route path="create_community" element={<CreateCommunity />} />
+              <Route path="comment" element={<Comment />} />
+              <Route path="*" element={<NotFound />} />
 
-          </Route>
-        </Routes>
-      </BrowserRouter>
+            </Route>
+          </Routes>
+        </BrowserRouter>
     </>
   )
 }
