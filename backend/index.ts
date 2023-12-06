@@ -818,6 +818,46 @@ app.get('/comment', async (req, res) => {
   }
 });
 
+//Gets children from post
+app.get('/children', async (req, res) => {
+  const {postID} = req.query; 
+
+  try {
+
+    interface comment {
+      content: string,
+      communityID: number,
+      userID: number,
+      postID: number,
+      datePosted: Date,
+      commentID: number,
+      parentID: number,
+      reputation: number
+    };
+
+    const [parents, parentFields] = await pool.promise().query(
+      `SELECT * FROM commentWithReputation WHERE postID = ? AND parentID IS NULL`,
+      [postID]
+    );
+
+    const promises = parents.map(async (parent: comment) => {
+      const [children, childFields] = await pool
+        .promise()
+        .query(`SELECT * FROM commentWithReputation WHERE parentID = ?`, [parent.commentID]);
+
+      parent["children"] = children;
+      return parent;
+    });
+
+    const ret = await Promise.all(promises);
+    
+    return res.json(ret)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
 //editsComment
 app.put('/editComment', async (req, res) => {
   if (!req.body || Object.keys(req.body).length === 0) {

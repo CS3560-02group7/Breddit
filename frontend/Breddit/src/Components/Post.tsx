@@ -14,7 +14,8 @@ export interface postProps {
     content: string,
     type: postType,
     postID: string,
-    tags: [string]
+    tags: [string],
+    username: string
 }
 
 
@@ -23,7 +24,7 @@ const Post = (props: postProps) => {
     const today = d.toLocaleDateString()
 
     // const reputation = likes - dislikes;
-    const userName = localStorage.getItem("username");
+    //const userName = localStorage.getItem("username");
     console.log(props.type)
     return (
         <div className="bg-offwhite w-5/6 h-fit p-5 m-3 rounded border-solid border-2 border-slate-gray">
@@ -31,7 +32,7 @@ const Post = (props: postProps) => {
                 <div className='text-2xl pb-3'>{props.title}</div>
             </div>
             <div className="flex">
-                <div>Posted by: {userName} </div>
+                <div>Posted by: {props.username} </div>
                 <div className='ml-1'>on {typeof props.datePosted === 'object' ? today : props.datePosted }</div>
             </div>
             <div className=''>{props.likes} likes</div>
