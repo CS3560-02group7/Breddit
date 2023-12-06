@@ -2,7 +2,7 @@
 // types
 
 // ensures that posts can only be one of these three types
-type postType = "image" | "text" | "link";
+type postType = "image" | "post" | "link";
 
 export interface postProps {
     title: string,
@@ -23,9 +23,10 @@ const Post = (props: postProps) => {
     const today = d.toLocaleDateString()
 
     // const reputation = likes - dislikes;
-    const userName = 'lolzers' 
+    const userName = localStorage.getItem("username");
+    console.log(props.type)
     return (
-        <div className="bg-offwhite w-[300px] h-fit p-5 m-3 rounded border-solid border-2 border-slate-gray">
+        <div className="bg-offwhite w-5/6 h-fit p-5 m-3 rounded border-solid border-2 border-slate-gray">
             <div className='flex align-middle items-center'>
                 <div className='text-2xl pb-3'>{props.title}</div>
             </div>
@@ -34,7 +35,9 @@ const Post = (props: postProps) => {
                 <div className='ml-1'>on {typeof props.datePosted === 'object' ? today : props.datePosted }</div>
             </div>
             <div className=''>{props.likes - props.dislikes} likes</div>
-            <div className='py-3'>{props.content}</div>
+            {props.type === "post" ? <div className='py-3'>{props.content}</div> : 
+            props.type === "image" ? <img src={props.content} /> : <></>}
+            
             <div className=''>{props.tags}</div>
         </div>
     )

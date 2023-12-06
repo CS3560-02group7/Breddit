@@ -25,6 +25,7 @@ function LoginForm(){
             if (response.data){
                 console.log(response.data);
                 localStorage.setItem("userID",response.data.userID);
+                localStorage.setItem("username",response.data.username);
                 navigate("home");
             }
         })

@@ -90,7 +90,7 @@ app.post('/log_in', async (req, res) => {
     }
 
     // Now that we know the user has the correct log in info, we can send back their userID, which the frontend will use
-    return res.json({userID: currUserInfo.userID})
+    return res.json({userID: currUserInfo.userID, username: currUserInfo.username})
 
   } catch (error) {
       console.error('An error occurred: ', error);

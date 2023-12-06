@@ -3,15 +3,17 @@ import { Select } from 'antd';
 import createPostText from '../assets/createPostText.svg'
 import createPostImage from '../assets/image.svg'
 import createLinkImage from '../assets/link.svg'
-import { useState, useEffect, SetStateAction } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
 import axios from 'axios';
+
+type postType = "post" | "image" | "link";
 
 
 
 const CreatePost = () => {
 
     //All States/variables
-    interface postForm { userID: number, communityID: number, title: string, postType: string, body: string, flair: string, date: string}
+    interface postForm { userID: number, communityID: number, title: string, postType: postType, body: string, flair: string, date: string}
     const d = new Date;
     const today = d.toLocaleDateString();
     const [formData, setFormData] = useState<postForm>({ userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "post", body: "", flair: "", date: today})
@@ -103,6 +105,10 @@ const CreatePost = () => {
             const reader = new FileReader();
             reader.onloadend = () => {
               const base64 = reader.result as string;
+                setFormData({
+                    ...formData,
+                    body: base64
+                });
               setBase64String(base64);
             };
             reader.readAsDataURL(file);
@@ -110,12 +116,6 @@ const CreatePost = () => {
 
         };
       
-        useEffect(() => {
-            setFormData({
-                ...formData,
-                body: base64String
-            });
-        }, [base64String])
         return (
           <div>
             <input type="file" accept="image/*" onChange={handleFileChange} /> 
@@ -123,17 +123,20 @@ const CreatePost = () => {
         );
       };
 
+      useEffect(() => {
+        console.log(formData)
+      }, [formData])
 
-    function postImage() {
+
+      const imagePost = () => {
         setFormData({
             ...formData,
-            postType: "image",
+            postType: "image"
         });
         setPostBody(
-        <div className='border-dashed w-full border-2 border-slate-400 rounded flex justify-center items-center h-48'>
-            <ImageUploadComponent/>
-        </div>
-
+            <div className='border-dashed w-full border-2 border-slate-400 rounded flex justify-center items-center h-48'>
+                <ImageUploadComponent/>
+            </div>
         )
     }
 
@@ -188,7 +191,7 @@ const CreatePost = () => {
                         <img src={createPostText} className='w-10 fill-slate-400 mr-2' />
                         <div>Post</div>
                     </div>
-                    <div onClick={postImage} className='border-y-2 border-x-2 py-5 w-full text-center rounded flex justify-center align-center items-center'>
+                    <div onClick={imagePost} className='border-y-2 border-x-2 py-5 w-full text-center rounded flex justify-center align-center items-center'>
                         <img src={createPostImage} className='w-10 fill-slate-400 mr-1' />
                         <div>Image & Video</div>
                     </div>
