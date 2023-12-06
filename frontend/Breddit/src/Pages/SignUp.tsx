@@ -32,6 +32,7 @@ const SignUp = () => {
                 email: formData.email,
                 password: formData.password,
                 username: formData.username,
+                profilePicture: formData.profilePicture
 
             }
             axios.post("http://localhost:3000/sign_up",account)

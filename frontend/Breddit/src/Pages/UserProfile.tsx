@@ -18,6 +18,7 @@ const UserProfile = () => {
         axios.get("http://localhost:3000/user?userID=" + userID)
         .then((response) => {
             setUserData(response.data[0])
+            console.log(response.data[0].profilePicture)
         }).catch(function (error) {
             alert(error);
         });
@@ -37,8 +38,8 @@ const UserProfile = () => {
     },[]);
 
     useEffect(() => {
-      //console.log(userCommunity);
-  },[userCommunity]);
+      console.log(userData);
+  },[userData]);
 
 
     function goToEditProfile(){
@@ -64,7 +65,7 @@ const UserProfile = () => {
                 </div>
                 <div className="mx-auto items-center flex-col bg-gray-700 h-full p-5 flex">
                   <div className="bg-white shadow-md w-1/3 h-auto flex-col rounded flex space-y-5 p-5 relative">
-                    <img src="https://i.redd.it/1b08e2gy2xo81.jpg" className="self-center w-20 h-20 rounded-full"/>
+                    <img src={userData.profilePicture} className="self-center w-20 h-20 rounded-full"/>
                     <div className="space-y-2">
                       <p className="text-2xl font-bold text-center text-gray-800">Username: {userData.username}</p>
                       <p className="text-center text-gray-500">Reputation: {userData.reputation}</p>
