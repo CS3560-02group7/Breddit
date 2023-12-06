@@ -530,9 +530,10 @@ app.get("/home", async (req, res) => {
   }
 
   const sqlStatement = `
-  SELECT postWithReputation.*, account.username
+  SELECT postWithReputation.*, account.username, community.name
   FROM postWithReputation 
   JOIN account on account.userID = postWithReputation.userID
+  JOIN community on community.communityID = postWithReputation.communityID
   ORDER BY date DESC LIMIT 10 `
   try {
     const [results, fields] = await pool.promise().query(sqlStatement)
@@ -564,10 +565,11 @@ app.get("/posts_in_community", async (req, res) => {
     tags: [String]
   }
   const sqlStatement = `
-  SELECT postWithReputation.*, account.username
+  SELECT postWithReputation.*, account.username, community.name
   FROM postWithReputation 
   JOIN account on account.userID = postWithReputation.userID
-  WHERE communityID = ?
+  JOIN community on community.communityID = postWithReputation.communityID
+  WHERE postWithReputation.communityID = ?
   ORDER BY date DESC LIMIT 10`
 
   try {
@@ -622,9 +624,10 @@ app.get('/post', async (req, res) => {
   const {postID} = req.query; 
   
   const sqlStatement = `
-  SELECT postWithReputation.*, account.username
+  SELECT postWithReputation.*, account.username, community.name
   FROM postWithReputation 
   JOIN account on account.userID = postWithReputation.userID
+  JOIN community on community.communityID = postWithReputation.communityID
   WHERE postID = ?`
 
   try {
@@ -644,7 +647,7 @@ app.get('/userPosts', async (req, res) => {
   const {userID} = req.query; 
   
   try {
-    const [results, fields] = await pool.promise().query(`SELECT * FROM postWithReputation WHERE userID = ? ORDER BY date DESC LIMIT 5`, [userID])
+    const [results, fields] = await pool.promise().query(`SELECT postWithReputation.*, community.name FROM postWithReputation JOIN community on community.communityID = postWithReputation.communityID WHERE postWithReputation.userID = ? ORDER BY date DESC LIMIT 5`, [userID])
     return res.json(results)
   } catch (error) {
     console.error(error)
