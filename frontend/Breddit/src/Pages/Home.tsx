@@ -13,7 +13,8 @@ const Home = () => {
         communityID: number,
         userID: number,
         flair: [string],
-        reputation: number
+        reputation: number,
+        username: string
     }
 
     const [postData, setPostData] = useState<post[]>();
@@ -29,8 +30,6 @@ const Home = () => {
     }, [])
 
     // TODO: Add handling for post types
-    // TODO: Upload new posts with not shit data (I love toes?? WE CANNOT SHOW THAT IN OUR PRESENTATION)
-    // TODO: Figure out likes and dislikes
 
     return (
         <>
@@ -44,7 +43,7 @@ const Home = () => {
             <div className='w-full h-max bg-slate-300'>
                 <li className='list-none ml-[10%] py-5'>
                 {postData && postData.map((post, idx) => {
-                    return <Post key={`${post.postID} -- ${idx}`} title={post.title} likes={post.reputation} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} />
+                    return <Post key={`${post.postID} -- ${idx}`} title={post.title} likes={post.reputation} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} username={post.username}/>
                 } )} 
                 </li>
 
