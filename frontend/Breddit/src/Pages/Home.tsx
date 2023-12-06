@@ -12,7 +12,8 @@ const Home = () => {
         date: Date,
         communityID: number,
         userID: number,
-        flair: [string]
+        flair: [string],
+        reputation: number
     }
 
     const [postData, setPostData] = useState<post[]>();
@@ -43,7 +44,7 @@ const Home = () => {
             <div className='w-full h-max bg-slate-300'>
                 <li className='list-none ml-[10%] py-5'>
                 {postData && postData.map((post, idx) => {
-                    return <Post key={`${post.postID} -- ${idx}`} title={post.title} likes={99} dislikes={10} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} />
+                    return <Post key={`${post.postID} -- ${idx}`} title={post.title} likes={post.reputation} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} />
                 } )} 
                 </li>
 
