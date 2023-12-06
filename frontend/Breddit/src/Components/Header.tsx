@@ -2,8 +2,10 @@
 //    Current community, logo, search, chat (?), username/karma section
 import { Select } from 'antd';
 import axios from 'axios';
-import { useState, useEffect, SetStateAction } from 'react';
+import { useState, useEffect, SetStateAction, useContext } from 'react';
 import { Input } from 'antd';
+import { SiteContext } from './SiteContext';
+import { useNavigate } from 'react-router-dom';
 
 
 export interface headerProps {
@@ -19,17 +21,26 @@ const Header = (props: headerProps) => {
     const [formData, setFormData] = useState<postForm>({ userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "post", body: "", flair: ""})
     interface communitySelection { value: string, label: string }
     const [communities, getCommunities] = useState<communitySelection[]>([]);
+    const { state: siteContext, dispatch: siteDispatch } = useContext(
+        SiteContext
+    );
+    
+    interface option {
+        value: number,
+        label: string
+    }
 
-    const onChangeCommunity = async (value: string) => {
-        await axios.get("http://localhost:3000/communityID?name="+value).then(function (response) {
-                if (response.data){
-                   console.log(response.data)
-                   console.log(value)
-                }
-            })
-            .catch(function (error) {
-                alert(error);
-            });
+    const nav = useNavigate();
+
+    const onChangeCommunity = async ( opt: number, opt2: option ) => {
+        // Here, the name of the community is label, ID is value
+        // reroute Change teh page location from /home --> /c/communityName
+        
+        // For some bizzare ass reason, if you pass in just one prop, it only gives you the VALUE that was selected
+        // But if you put in a second prop, it returns the whole JSON, which we can destructure
+        const {value, label} = opt2;
+        nav("/c/"+label)
+        
     };
     
     const onSearch = (value: string) => {
@@ -53,11 +64,12 @@ const Header = (props: headerProps) => {
     useEffect(() => {
         axios.get("http://localhost:3000/allCommunities").then(function (response) {
             if (response.data) {
+                console.log(response.data)
                 const allCommunitiesJson = response.data
                 const formPrep: communitySelection[] = [];
                 for (let community in allCommunitiesJson) {
                     formPrep.push({
-                        value: allCommunitiesJson[community].name,
+                        value: allCommunitiesJson[community].communityID,
                         label: allCommunitiesJson[community].name
                     })
                 }
