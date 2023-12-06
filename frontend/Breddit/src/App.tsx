@@ -56,7 +56,7 @@ function App() {
               <Route path="create_post" element={<CreatePost />} />
               <Route path="profile/:user" element={<UserProfile />} />
               <Route path="create_community" element={<CreateCommunity />} />
-              <Route path="comment" element={<Comment />} />
+              <Route path="post/:id" element={<CommunityPost />} />
               <Route path="editprofile/:user" element={<EditProfile />} />
               <Route path="*" element={<NotFound />} />
             </Route>
