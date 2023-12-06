@@ -36,7 +36,7 @@ const UserProfile = () => {
                                     <p className="text-xl font-bold text-gray-800">Posts</p>
                                     <button type="submit" className="hover:bg-green-700 rounded text-white bg-green-500
                                         font-bold py-1 px-2">
-                                        <div className="fas fa-plus"></div>
+                                        <div className="fas fa-plus">+</div>
                                     </button>
                                     </div>
                                 </section>
@@ -48,7 +48,7 @@ const UserProfile = () => {
                                     <p className="text-xl font-bold text-gray-800">Communities</p>
                                     <button type="submit" className="hover:bg-green-700 rounded text-white bg-green-500
                                         font-bold py-1 px-2">
-                                    <div className="fas fa-plus"></div>
+                                    <div className="fas fa-plus"> + </div>
                                     </button>
                                 </div>
                                 </section>
