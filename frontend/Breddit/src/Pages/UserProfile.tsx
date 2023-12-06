@@ -43,14 +43,11 @@ const UserProfile = () => {
     }
 
     if (userData){
-        return(<div>
-            <div className="canvas-paper">
+        return(<div className="bg-gray-100">
+            <div className="canvas-paper ">
               <div className="h-screen bg-gray-100">
                 <div>
                   <header className="bg-amber-500 shadow-md justify-between items-center p-5 flex">
-                    <nav>
-                      <a href="" className="text-2xl font-bold ml-5 text-gray-800">Breddit</a>
-                    </nav>
                   </header>
                 </div>
                 <div className="mx-auto items-center container p-5 flex flex-col bg-gray-700 h-screen">
@@ -58,11 +55,8 @@ const UserProfile = () => {
                     <img src="https://i.redd.it/1b08e2gy2xo81.jpg" className="self-center w-20 h-20 rounded-full"/>
                     <div className="space-y-2">
                       <p className="text-2xl font-bold text-gray-800 text-center">Username: {userData.username}</p>
-                      <p className="text-gray-500 text-center">Bio</p>
                       <p className="text-gray-500 text-center">Reputation: {userData.reputation}</p>
                     </div>
-                    <button type="submit" className="font-sans hover:bg-blue-700 rounded text-white bg-blue-500
-                        font-bold py-2 px-4">Edit Profile</button>
                     <div className="absolute right-0 top-5"></div>
                   </div>
                   <div className="w-full mt-5 flex flex-row space-x-5">

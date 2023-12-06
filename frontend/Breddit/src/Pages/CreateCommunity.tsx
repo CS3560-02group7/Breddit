@@ -26,7 +26,7 @@ const CreateCommunity = () => {
             .then(function (response) {
                 if (response.data){
                     console.log(response.data)
-                    nav("/home");
+                    nav("/");
                 }
             })
             .catch(function (error) {
@@ -36,7 +36,6 @@ const CreateCommunity = () => {
     }
 
     const ImageUploadComponent: React.FC = () => {
-        const [base64String, setBase64String] = useState<string>('');
       
         const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
           const file = event.target.files ? event.target.files[0] : null;
@@ -53,7 +52,7 @@ const CreateCommunity = () => {
       
         return (
           <div>
-            <input type="file" accept="image/*" onChange={handleFileChange} /> 
+            <input className="content-center" type="file" accept="image/*" onChange={handleFileChange} /> 
           </div>
         );
       };
