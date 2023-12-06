@@ -9,7 +9,7 @@ export interface postProps {
     likes: number,
     dislikes: number,
     userID: string,
-    datePosted: Date,
+    datePosted: string,
     // We are only allowing one image per post, so that we can only us a string :)
     content: string,
     type: postType,
@@ -19,7 +19,9 @@ export interface postProps {
 
 
 const Post = (props: postProps) => {
-    const today = new Date();
+    const d = new Date();
+    const today = d.toLocaleDateString()
+
     // const reputation = likes - dislikes;
     const userName = 'lolzers' 
     return (
@@ -29,7 +31,7 @@ const Post = (props: postProps) => {
             </div>
             <div className="flex">
                 <div>Posted by: {userName} </div>
-                <div className='ml-1'>on {props.datePosted.toLocaleDateString()}</div>
+                <div className='ml-1'>on {typeof props.datePosted === 'object' ? today : props.datePosted }</div>
             </div>
             <div className=''>{props.likes - props.dislikes} likes</div>
             <div className='py-3'>{props.content}</div>

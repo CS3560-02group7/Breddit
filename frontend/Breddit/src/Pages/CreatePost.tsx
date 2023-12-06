@@ -11,8 +11,10 @@ import axios from 'axios';
 const CreatePost = () => {
 
     //All States/variables
-    interface postForm { userID: number, communityID: number, title: string, postType: string, body: string, flair: string, }
-    const [formData, setFormData] = useState<postForm>({ userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "post", body: "", flair: ""})
+    interface postForm { userID: number, communityID: number, title: string, postType: string, body: string, flair: string, date: string}
+    const d = new Date;
+    const today = d.toLocaleDateString();
+    const [formData, setFormData] = useState<postForm>({ userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "post", body: "", flair: "", date: today})
     interface communitySelection { value: string, label: string }
     const [communities, getCommunities] = useState<communitySelection[]>([]);
     const [postBody, setPostBody] = useState(

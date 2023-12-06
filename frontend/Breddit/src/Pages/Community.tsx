@@ -1,16 +1,26 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect} from 'react';
+import { useNavigate, useLocation } from "react-router-dom";
 import Post from '../Components/Post.tsx'
 import axios from 'axios';
 
+
+
+
+
 const Community = () => {
-    const title = 'CPP Subbreddit'
+    const location = useLocation();
+    const { pathname } = location;
+
+    // This will ensure that if a user just enters here, we can still render everything as needed
+    const title: string = pathname.substring(3);
     const [joinText, setJoinButton] = useState('Join')
 
+    // TODO: begin user join community flow
     const joined = () => {
         // Toggle between 'join' and 'joined'
         setJoinButton((prevText) => (prevText === 'Join' ? 'Joined' : 'Join'));
     };
+
 
     interface post {
         postID: number, 
@@ -30,16 +40,29 @@ const Community = () => {
     }
 
     const [postData, setPostData] = useState<post[]>();
+    const [communityID, setCommunityID] = useState<number>();
+
+    useEffect(() => {
+        axios.get(`http://localhost:3000/communityID?name=${title}`)
+        .then((response) => {
+            setCommunityID(response.data[0].communityID)
+            console.log(response.data[0].communityID)
+        })
+        .catch((err) => {console.error(err)})
+    }, [])
 
     useEffect(() => {
         const fetchPosts = async () => {
-            axios.get("http://localhost:3000/posts_in_community?communityID=6")
+            const url: string = `http://localhost:3000/posts_in_community?communityID=${communityID}`
+            console.log(url)
+            axios.get(url)
             .then((response) => {
                 setPostData(response.data)
             })
+            .catch((err) => {console.error(err)})
         }
         fetchPosts();
-    }, [])
+    }, [communityID])
 
     return (
         <>
@@ -54,6 +77,7 @@ const Community = () => {
             <div className='w-full h-max bg-slate-300'>
             <li className='list-none ml-[10%] py-5'>
                 {postData && postData.map((post, idx) => {
+                    console.log(post.date, typeof post.date)
                     return <Post key={`${post.postID} -- ${idx}`} title={post.title} likes={99} dislikes={10} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} />
                 } )} 
                 </li>
