@@ -35,11 +35,20 @@ const Post = (props: postProps) => {
                 <div className='ml-1'>on {typeof props.datePosted === 'object' ? today : props.datePosted }</div>
             </div>
             <div className=''>{props.likes - props.dislikes} likes</div>
-            {props.type === "post" ? <div className='py-3'>{props.content}</div> : 
-            props.type === "image" ? <img src={props.content} /> : <></>}
+            {
+            props.type === "post" ? <div className='py-3'>{props.content}</div> : 
+            props.type === "image" ? <img src={props.content} /> :
+            props.type === "link" ? 
+            <div className="py-3">
+                <a href={props.content}>
+                    {props.title}
+                </a>
+            </div> : 
+            <></>
+            }
             
             <div className=''>{props.tags}</div>
-        </div>
+            </div>
     )
 }
 

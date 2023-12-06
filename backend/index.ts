@@ -508,7 +508,7 @@ app.get("/home", async (req, res) => {
   }
 
   try {
-    const [results, fields] = await pool.promise().query(`SELECT * FROM post ORDER BY date ASC LIMIT 10 `)
+    const [results, fields] = await pool.promise().query(`SELECT * FROM post ORDER BY date`)
     if (results.length === 0) {
       return res.sendStatus(404);
     }
