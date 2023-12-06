@@ -631,6 +631,19 @@ app.get('/post', async (req, res) => {
   }
 });
 
+//Gets Recent Posts for User
+app.get('/userPosts', async (req, res) => {
+  const {userID} = req.query; 
+  
+  try {
+    const [results, fields] = await pool.promise().query(`SELECT * FROM postWithReputation WHERE userID = ? ORDER BY date DESC LIMIT 5`, [userID])
+    return res.json(results)
+  } catch (error) {
+    console.error(error)
+    return res.sendStatus(500)
+  }
+});
+
 //Edit Body Of Post
 app.put('/editPost', async (req, res) => {
   if (!req.body || Object.keys(req.body).length === 0) {
