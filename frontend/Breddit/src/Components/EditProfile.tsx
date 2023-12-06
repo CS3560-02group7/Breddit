@@ -14,11 +14,6 @@ const EditProfile = () => {
         <input type="file" className="shadow appearance-none border rounded focus:outline-none focus:shadow-outline w-full
             py-2 px-3 text-gray-700 leading-tight"/>
       </div>
-      <div className="mb-4">
-        <label className="text-gray-700 text-sm font-bold mb-2 block">Bio</label>
-        <textarea placeholder="Your Bio" className="w-full py-2 px-3 text-gray-700 leading-tight shadow
-            appearance-none border rounded focus:outline-none focus:shadow-outline"></textarea>
-      </div>
       <div className="justify-center flex">
         <button type="submit" className="rounded focus:outline-none focus:shadow-outline hover:bg-blue-700
             font-bold py-1 px-2 text-white bg-blue-500">Save Changes</button>

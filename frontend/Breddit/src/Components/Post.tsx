@@ -34,7 +34,7 @@ const Post = (props: postProps) => {
                 <div>Posted by: {userName} </div>
                 <div className='ml-1'>on {typeof props.datePosted === 'object' ? today : props.datePosted }</div>
             </div>
-            <div className=''>{props.likes - props.dislikes} likes</div>
+            <div className=''>{props.likes} likes</div>
             {props.type === "post" ? <div className='py-3'>{props.content}</div> : 
             props.type === "image" ? <img src={props.content} /> : <></>}
             
