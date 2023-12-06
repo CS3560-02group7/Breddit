@@ -83,7 +83,10 @@ const Community = () => {
             .then((response) => {
                 setPostData(response.data)
             })
-            .catch((err) => {console.error(err)})
+            .catch((err) => {
+                console.error(err)
+                setPostData([])
+            })
         }
         fetchPosts();
     }, [communityID])
@@ -91,8 +94,6 @@ const Community = () => {
     useEffect(() => {
         axios.get('http://localhost:3000/checkRole?userID='+userID+'&communityID='+communityID)
         .then((response) => {
-            console.log("Role:")
-            console.log(response.data)
             if (response.data == "None"){
                 setJoinButton("Join")
             }
@@ -103,7 +104,7 @@ const Community = () => {
                 setJoinButton("Delete Community")
             }
         });
-    }, [userID])
+    }, [communityID])
 
     return (
         <>
