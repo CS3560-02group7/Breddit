@@ -52,8 +52,9 @@ app.post('/sign_up', async (req, res) => {
       };
 
       // Insert user into db (with hashed password)
-      await pool.promise().query('INSERT INTO account SET ?', newUser);
+      const [results1, fields1] = await pool.promise().query('INSERT INTO account SET ?', [newUser]);
 
+      return res.json(results1.insertId)
       return res.sendStatus(201); // Successfully created the user
   } catch (error) {
       console.error('An error occurred: ', error);
