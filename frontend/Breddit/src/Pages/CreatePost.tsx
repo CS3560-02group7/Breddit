@@ -4,6 +4,7 @@ import createPostText from '../assets/createPostText.svg'
 import createPostImage from '../assets/image.svg'
 import createLinkImage from '../assets/link.svg'
 import { useState, useEffect, ChangeEvent } from 'react';
+import {useNavigate} from 'react-router-dom'
 import axios from 'axios';
 
 type postType = "post" | "image" | "link";
@@ -19,6 +20,7 @@ const CreatePost = () => {
     const [formData, setFormData] = useState<postForm>({ userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "post", body: "", flair: "", date: today})
     interface communitySelection { value: string, label: string }
     const [communities, getCommunities] = useState<communitySelection[]>([]);
+    const nav = useNavigate();
     const [postBody, setPostBody] = useState(
         <div className="login-form">
           <Input.TextArea rows={7} placeholder='Text(optional)' onChange={onChangeTextArea} name="body" />
@@ -75,7 +77,7 @@ const CreatePost = () => {
         e.preventDefault();
         axios.post("http://localhost:3000/post",formData).then(function (response) {
             if (response.data) {
-                console.log(response.data)
+                nav("/")
             }
         })
             .catch(function (error) {

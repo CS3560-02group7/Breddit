@@ -34,29 +34,6 @@ const CreateCommunity = () => {
             });
 
     }
-
-    const ImageUploadComponent: React.FC = () => {
-      
-        const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-          const file = event.target.files ? event.target.files[0] : null;
-          if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              const base64 = reader.result as string;
-              setBase64String(base64);
-            };
-            reader.readAsDataURL(file);
-          }
-
-        };
-      
-        return (
-          <div>
-            <input className="content-center" type="file" accept="image/*" onChange={handleFileChange} /> 
-          </div>
-        );
-      };
-
     return (
         <div className='bg-slate-500 h-screen flex align-middle justify-center'>
             <div className='w-2/5 m-auto bg-slate-300 p-10 rounded'>
@@ -72,7 +49,6 @@ const CreateCommunity = () => {
                         <Input placeholder='Description' type="text" className="w-full my-2 pb-20" id="description" name="description">
                         </Input>
                     </div>
-                    <ImageUploadComponent/>
                     <div className="login-form w-full">
                         <button type="button" className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded w-full mt-4" onClick = {uploadCommunity}>Create</button>
                     </div>

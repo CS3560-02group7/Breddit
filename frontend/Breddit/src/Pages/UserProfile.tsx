@@ -28,13 +28,18 @@ const UserProfile = () => {
             alert(error);
         });
         axios.get("http://localhost:3000/userCommunities?userID=" + userID)
-        .then((response) => {``
-            setUserCommunity(response.data.data)
-            console.log(userCommunity)
+        .then((response) => {
+          console.log(response.data)
+            setUserCommunity(response.data)
         }).catch(function (error) {
             alert(error);
         });
     },[]);
+
+    useEffect(() => {
+      //console.log(userCommunity);
+  },[userCommunity]);
+
 
     function goToEditProfile(){
         const userID = localStorage.getItem("userID");
@@ -87,6 +92,9 @@ const UserProfile = () => {
                           <div className="fas fa-plus">+</div>
                         </button>
                       </div>
+                      {userCommunity && userCommunity.map((user,idx) =>{
+                        return <div>{user.name}</div>
+                      })}
                     </section>
                   </div>
                 </div>
