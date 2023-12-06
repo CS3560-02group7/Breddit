@@ -619,8 +619,14 @@ app.post('/post', async (req, res) => {
 app.get('/post', async (req, res) => {
   const {postID} = req.query; 
   
+  const sqlStatement = `
+  SELECT postWithReputation.*, account.username
+  FROM postWithReputation 
+  JOIN account on account.userID = postWithReputation.userID
+  WHERE postID = ?`
+
   try {
-    const [results, fields] = await pool.promise().query(`SELECT * FROM postWithReputation WHERE postID = ?`, [postID])
+    const [results, fields] = await pool.promise().query(sqlStatement, [postID])
     if (results.length === 0) {
       return res.sendStatus(404);
     }
@@ -839,8 +845,14 @@ app.post('/commentReply', async (req, res) => {
 app.get('/comment', async (req, res) => {
   const {commentID} = req.query; 
   
+  const sqlStatement = `
+  SELECT commentWithReputation.*, account.username
+  FROM commentWithReputation 
+  JOIN account on account.userID = commentWithReputation.userID
+  WHERE commentID = ?`
+
   try {
-    const [results, fields] = await pool.promise().query(`SELECT * FROM commentWithReputation WHERE commentID = ?`, [commentID])
+    const [results, fields] = await pool.promise().query(sqlStatement, [commentID])
     if (results.length === 0) {
       return res.sendStatus(404);
     }
@@ -865,18 +877,29 @@ app.get('/children', async (req, res) => {
       datePosted: Date,
       commentID: number,
       parentID: number,
-      reputation: number
+      reputation: number,
+      username: string
     };
 
+    const sqlStatement = `
+    SELECT commentWithReputation.*, account.username
+    FROM commentWithReputation 
+    JOIN account on account.userID = commentWithReputation.userID
+    WHERE postID = ? AND parentID IS NULL`
     const [parents, parentFields] = await pool.promise().query(
-      `SELECT * FROM commentWithReputation WHERE postID = ? AND parentID IS NULL`,
+      sqlStatement,
       [postID]
     );
 
+    const sqlStatement1 = `
+    SELECT commentWithReputation.*, account.username
+    FROM commentWithReputation 
+    JOIN account on account.userID = commentWithReputation.userID
+    WHERE parentID = ?`
     const promises = parents.map(async (parent: comment) => {
       const [children, childFields] = await pool
         .promise()
-        .query(`SELECT * FROM commentWithReputation WHERE parentID = ?`, [parent.commentID]);
+        .query(sqlStatement1, [parent.commentID]);
 
       parent["children"] = children;
       return parent;
