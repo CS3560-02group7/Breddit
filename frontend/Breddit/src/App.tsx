@@ -39,9 +39,11 @@ function App() {
     <>
         <BrowserRouter>
           <Routes>
+            <Route path="signup" element={<SignUp />} />
+            <Route path="login" element={<Login />} />
             <Route path="/" element={<Layout />}>
               
-              <Route index element={<Login />} />
+              <Route index element={<Home />} />
               <Route path="chat" element={<Chat />} />
               <Route
                 path="/c/:community"
@@ -51,15 +53,12 @@ function App() {
                 path="CommunityPost"
                 element={<CommunityPost />}
               />
-              <Route path="home" element={<Home />} />
-              <Route path="signup" element={<SignUp />} />
               <Route path="create_post" element={<CreatePost />} />
               <Route path="profile/:user" element={<UserProfile />} />
               <Route path="create_community" element={<CreateCommunity />} />
               <Route path="comment" element={<Comment />} />
               <Route path="editprofile/:user" element={<EditProfile />} />
               <Route path="*" element={<NotFound />} />
-
             </Route>
           </Routes>
         </BrowserRouter>
