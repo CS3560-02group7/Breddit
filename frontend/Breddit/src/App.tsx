@@ -10,6 +10,7 @@ import CreatePost from "./Pages/CreatePost";
 import UserProfile from "./Pages/UserProfile";
 import CreateCommunity from "./Pages/CreateCommunity";
 import Comment from "./Components/Comment";
+import CommunityPost from "./Pages/CommunityPost.tsx";
 
 /*
 Componenets 
@@ -44,6 +45,10 @@ function App() {
               <Route
                 path="/c/:community"
                 element={<Community />}
+              />
+              <Route
+                path="CommunityPost"
+                element={<CommunityPost />}
               />
               <Route path="home" element={<Home />} />
               <Route path="signup" element={<SignUp />} />

@@ -21,7 +21,7 @@ export interface CommentProps {
 
 const Comment = () => {
     return (
-        <div className="mx-auto items-start justify-start flex-col container flex">
+        <div className="mx-auto items-start justify-start flex-col container flex bg-offwhite rounded p-4">
     <div className="w-full pt-0 p-4">
       <p className="font-extrabold text-3xl mb-3">Comments</p>
       <div className="items-stretch w-full pt-4 flex-row flex border-t border-gray-200">
