@@ -52,19 +52,16 @@ const UserProfile = () => {
                     </nav>
                   </header>
                 </div>
-                <div className="mx-auto items-center container p-5 flex flex-col bg-gray-700 h-screen">
+                <div className="mx-auto items-center flex-col bg-gray-700 h-full p-5 flex">
                   <div className="bg-white shadow-md w-1/3 h-auto flex-col rounded flex space-y-5 p-5 relative">
                     <img src="https://i.redd.it/1b08e2gy2xo81.jpg" className="self-center w-20 h-20 rounded-full"/>
                     <div className="space-y-2">
-                      <p className="text-2xl font-bold text-gray-800 text-center">Username: {userData.username}</p>
-                      <p className="text-gray-500 text-center">Bio</p>
-                      <p className="text-gray-500 text-center">Reputation: {userData.reputation}</p>
+                      <p className="text-2xl font-bold text-center text-gray-800">Username: {userData.username}</p>
+                      <p className="text-center text-gray-500">Reputation: {userData.reputation}</p>
                     </div>
-                    <button type="submit" className="font-sans hover:bg-blue-700 rounded text-white bg-blue-500
-                        font-bold py-2 px-4">Edit Profile</button>
                     <div className="absolute right-0 top-5"></div>
                   </div>
-                  <div className="w-full mt-5 flex flex-row space-x-5">
+                  <div className="w-full mt-5 flex-row flex space-x-5">
                     <section className="bg-white shadow-md w-2/3 rounded p-5">
                       <div className="justify-between items-center flex">
                         <p className="text-xl font-bold text-gray-800">Posts</p>
