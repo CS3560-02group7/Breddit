@@ -76,9 +76,6 @@ const UserProfile = () => {
                                     </div>
                                 </section>
                                 <section className="bg-offwhite shadow-md rounded p-5">
-                                    <p className="text-xl font-bold text-gray-800">Comments</p>
-                                </section>
-                                <section className="bg-offwhite shadow-md rounded p-5">
                                 <div className="justify-between items-center flex">
                                     <p className="text-xl font-bold text-gray-800">Communities</p>
                                     <button className="hover:bg-green-700 rounded text-white bg-green-500

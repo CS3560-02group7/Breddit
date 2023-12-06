@@ -508,8 +508,13 @@ app.get("/home", async (req, res) => {
     tags: [String]
   }
 
+  const sqlStatement = `
+  SELECT postWithReputation.*, account.username
+  FROM postWithReputation 
+  JOIN account on account.userID = postWithReputation.userID
+  ORDER BY date ASC LIMIT 10 `
   try {
-    const [results, fields] = await pool.promise().query(`SELECT * FROM postWithReputation ORDER BY date ASC LIMIT 10 `)
+    const [results, fields] = await pool.promise().query(sqlStatement)
     if (results.length === 0) {
       return res.sendStatus(404);
     }
@@ -537,9 +542,14 @@ app.get("/posts_in_community", async (req, res) => {
     content: String,
     tags: [String]
   }
+  const sqlStatement = `
+  SELECT postWithReputation.*, account.username
+  FROM postWithReputation 
+  JOIN account on account.userID = postWithReputation.userID
+  WHERE communityID = ?`
 
   try {
-    const [results, fields] = await pool.promise().query(`SELECT * FROM postWithReputation WHERE communityID = ?`, [communityID])
+    const [results, fields] = await pool.promise().query(sqlStatement, [communityID])
     if (results.length === 0) {
       return res.sendStatus(404);
     }
