@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useState, useEffect, SetStateAction, useContext } from 'react';
 import { Input } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import Post from '../Components/Post.tsx'
 
 
 const UserProfile = () => {
@@ -22,6 +23,7 @@ const UserProfile = () => {
         });
         axios.get("http://localhost:3000/userPosts?userID=" + userID)
         .then((response) => {
+            console.log(response)
             setUserPosts(response.data)
             console.log(userPosts)
         }).catch(function (error) {
@@ -45,7 +47,7 @@ const UserProfile = () => {
     if (userData){
         return(<div className="bg-gray-100">
             <div className="canvas-paper ">
-              <div className="h-screen bg-gray-100">
+              <div className="h-full bg-gray-100">
                 <div>
                   <header className="bg-amber-500 shadow-md justify-between items-center p-5 flex">
                   </header>
@@ -68,6 +70,9 @@ const UserProfile = () => {
                           <div className="fas fa-plus">+</div>
                         </button>
                       </div>
+                      {userPosts && userPosts.map((post, idx) => {
+                            return <Post key={`${post.postID} -- ${idx}`} title={post.title} likes={post.reputation} userID={String(post.userID)} type={post.postType} content={post.body} postID={String(post.postID)} datePosted={post.date || new Date} tags={post.flair} />
+                        } )}
                     </section>
                     <section className="bg-white shadow-md w-1/2 rounded p-5">
                       <div className="justify-between items-center flex">
