@@ -23,9 +23,14 @@ const UserProfile = () => {
         });
         axios.get("http://localhost:3000/userPosts?userID=" + userID)
         .then((response) => {
-            console.log(response)
             setUserPosts(response.data)
-            console.log(userPosts)
+        }).catch(function (error) {
+            alert(error);
+        });
+        axios.get("http://localhost:3000/userCommunities?userID=" + userID)
+        .then((response) => {``
+            setUserCommunity(response.data.data)
+            console.log(userCommunity)
         }).catch(function (error) {
             alert(error);
         });
