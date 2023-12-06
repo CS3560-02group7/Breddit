@@ -1,5 +1,9 @@
 //  Navbar
 //    Current community, logo, search, chat (?), username/karma section
+import { Select } from 'antd';
+import axios from 'axios';
+import { useState, useEffect, SetStateAction } from 'react';
+import { Input } from 'antd';
 
 
 export interface headerProps {
@@ -10,10 +14,65 @@ export interface headerProps {
     userID: string,
 }
 const Header = (props: headerProps) => {
+    //All States/variables
+    interface postForm { userID: number, communityID: number, title: string, postType: string, body: string, flair: string, }
+    const [formData, setFormData] = useState<postForm>({ userID: Number(localStorage.getItem("userID")), communityID: -1, title: "", postType: "post", body: "", flair: ""})
+    interface communitySelection { value: string, label: string }
+    const [communities, getCommunities] = useState<communitySelection[]>([]);
+
+    const onChangeCommunity = async (value: string) => {
+        await axios.get("http://localhost:3000/communityID?name="+value).then(function (response) {
+                if (response.data){
+                   console.log(response.data)
+                   console.log(value)
+                }
+            })
+            .catch(function (error) {
+                alert(error);
+            });
+    };
+    
+    const onSearch = (value: string) => {
+        console.log('search:', value);
+    };
+    
+
+    const filterOption = (input: string, option?: { label: string; value: string }) =>
+        (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
+
+    // function handleChange(e: { target: { name: any; value: any; }; }) {
+    //     const { name, value } = e.target;
+    //     console.log
+    //     setFormData({
+    //         ...formData,
+    //         [name]: value,
+    //     });
+    // }
+
+
+    useEffect(() => {
+        axios.get("http://localhost:3000/allCommunities").then(function (response) {
+            if (response.data) {
+                const allCommunitiesJson = response.data
+                const formPrep: communitySelection[] = [];
+                for (let community in allCommunitiesJson) {
+                    formPrep.push({
+                        value: allCommunitiesJson[community].name,
+                        label: allCommunitiesJson[community].name
+                    })
+                }
+                getCommunities(formPrep)
+            }
+        })
+            .catch(function (error) {
+                alert(error);
+            });
+    }, []);
+
     return (
         <>
-            <div className="flex flex-row w-screen bg-slate border-solid border-black border-b-2">
-                <div className="flex flex-row w-1/2 justify-start pl-6">
+            <div className="flex flex-row w-screen bg-slate border-solid border-black border-b-2 items-center">
+                <div className="flex flex-row w-1/2 justify-start pl-6 items-center">
                     <div className="flex w-5 h-5 pt-1px">
                         <a href="../Home">
                             <img className="object-cover" src={props.logoSource} alt="Breddit Logo" />
@@ -22,6 +81,17 @@ const Header = (props: headerProps) => {
                     <div className="pl-2">
                         {props.currCommunity}
                     </div>
+                    <Select
+                    className='ml-3 w-1/2 '
+                    showSearch
+                    placeholder="Select a Community"
+                    optionFilterProp="children"
+                    onChange={onChangeCommunity}
+                    onSearch={onSearch}
+                    filterOption={filterOption}
+                    options={communities}
+                    value={this}
+                />
                 </div>
                 <div className="flex flex-row w-1/2 justify-end pr-6">
                     <div>
